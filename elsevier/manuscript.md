@@ -1,8 +1,16 @@
 # RhizoWhisperer/RHIZO-NET: Root Health and Integrated Zonal Optimization Network via Edaphic Topology
 
-**Authors:** Runtime Slayers Research Group  
-*Department of Computer Science and Agricultural Bioengineering, Amrita Vishwa Vidyapeetham*  
-*Corresponding Email:* `runtime-slayers@research.amrita.edu`  
+**Authors:**  
+Bhavanam Rajendra Reddy, Boddu Saran\*, Muthuraman Ramanathan, Palakurthi K S S S S Srihari Likith  
+
+**Affiliation:**  
+*Amrita School of Artificial Intelligence, Coimbatore, Amrita Vishwa Vidyapeetham, India*  
+
+**Email Addresses:**  
+- `brr1154@gmail.com` (Bhavanam Rajendra Reddy)  
+- `saran.boddu777@gmail.com` (\*Corresponding Author: Boddu Saran)  
+- `9ramanathan@gmail.com` (Muthuraman Ramanathan)  
+- `likithpalakurthi9@gmail.com` (Palakurthi K S S S S Srihari Likith)  
 
 ---
 

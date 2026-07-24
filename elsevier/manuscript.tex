@@ -16,9 +16,20 @@
 
 \title{RhizoWhisperer/RHIZO-NET: Root Health and Integrated Zonal Optimization Network via Edaphic Topology}
 
-\author[amrita]{Runtime Slayers Research Group\corref{mycorrespondingauthor}}
+\author[amrita]{Bhavanam Rajendra Reddy}
+\ead{brr1154@gmail.com}
+
+\author[amrita]{Boddu Saran\corref{mycorrespondingauthor}}
 \cortext[mycorrespondingauthor]{Corresponding author}
-\address[amrita]{Department of Computer Science and Agricultural Bioengineering, Amrita Vishwa Vidyapeetham}
+\ead{saran.boddu777@gmail.com}
+
+\author[amrita]{Muthuraman Ramanathan}
+\ead{9ramanathan@gmail.com}
+
+\author[amrita]{Palakurthi K S S S S Srihari Likith}
+\ead{likithpalakurthi9@gmail.com}
+
+\address[amrita]{Amrita School of Artificial Intelligence, Coimbatore, Amrita Vishwa Vidyapeetham, India}
 
 \begin{abstract}
 Characterizing Root System Architecture (RSA) in situ remains a fundamental challenge in computational plant phenotyping due to severe soil particle occlusion, background clutter in minirhizotron imaging, and intricate thin root connectivity loss. In this paper, we present RhizoWhisperer (RHIZO-NET), a novel end-to-end multi-modal deep learning framework, topological graph phenotyping engine, and edaphic climate-resilience platform. RHIZO-NET integrates a novel neural architecture suite consisting of five distinct models: RhizoUNet, RhizoAttentionNet, DualStreamRootNet, RhizoHybridTransformer, and RhizoGraphFormer. To preserve thin root connectivity, we introduce the Physics-Informed Edaphic Transport Loss (PIET-Loss), enforcing mass flux conservation ($\nabla \cdot \mathbf{J} = 0$) alongside centerline Dice (clDiceLoss). Disconnected segments are reconstructed via Generative Root Skeleton Reconstruction (GRSR). Fusing skan graph phenotyping with ISRIC SoilGrids 0-200 cm chemical profiles via PyG 2.0 GNNs and RhizoFusionNet, the system powers a TNAU Agronomic Recommendation Engine providing crop-specific fertilizer schedules for Sorghum, Tomato, Turmeric, Groundnut, and Marigold. RHIZO-NET achieves a state-of-the-art segmentation IoU of 97.9\% and a final loss of 0.0412 across 106,900 images from 6 benchmark datasets.
