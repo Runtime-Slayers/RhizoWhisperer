@@ -15,3 +15,6 @@ kaggle.json
 *.out
 *.run.xml
 *.spl
+
+elsevier/
+elsevier/*
