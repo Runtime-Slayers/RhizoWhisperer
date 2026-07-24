@@ -8,3 +8,10 @@ __pycache__/
 venv/
 .env
 kaggle.json
+*.aux
+*.bcf
+*.blg
+*.log
+*.out
+*.run.xml
+*.spl
