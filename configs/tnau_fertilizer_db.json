@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "source": "Tamil Nadu Agricultural University (TNAU) Agritech Portal",
+    "references": [
+      "https://agritech.tnau.ac.in/agriculture/millets_sorghum_mainfield_preparation_fertilizer.html",
+      "https://agritech.tnau.ac.in/agriculture/crop_prot_crop_grounnut_nutrient%20mgmt.html",
+      "https://agritech.tnau.ac.in/horticulture/horti_spice_turmeric_manuring.html",
+      "https://agritech.tnau.ac.in/horticulture/ferti_schedule.pdf",
+      "https://agritech.tnau.ac.in/horticulture/FERTILIZER%20SCHEDULE%20FOR%20FLOWER%20CROPS.pdf",
+      "https://agritech.tnau.ac.in/agriculture/agri_soil_rating.html",
+      "https://agritech.tnau.ac.in/agriculture/agri_soil_soilratingchart.html",
+      "https://agritech.tnau.ac.in/agriculture/agri_nutrientmgt_fertilizers.html"
+    ]
+  },
+  "soil_rating_thresholds": {
+    "available_nitrogen_kg_ha": {
+      "low": {"max": 240},
+      "medium": {"min": 240, "max": 480},
+      "high": {"min": 480}
+    },
+    "available_phosphorus_kg_ha": {
+      "low": {"max": 11},
+      "medium": {"min": 11, "max": 22},
+      "high": {"min": 22}
+    },
+    "available_potassium_kg_ha": {
+      "low": {"max": 110},
+      "medium": {"min": 110, "max": 280},
+      "high": {"min": 280}
+    },
+    "soil_ph": {
+      "highly_acidic": {"max": 5.0},
+      "acidic": {"min": 5.0, "max": 6.5},
+      "neutral": {"min": 6.5, "max": 7.5},
+      "alkaline": {"min": 7.5, "max": 8.5},
+      "highly_alkaline": {"min": 8.5}
+    },
+    "organic_carbon_percent": {
+      "low": {"max": 0.5},
+      "medium": {"min": 0.5, "max": 0.75},
+      "high": {"min": 0.75}
+    }
+  },
+  "blanket_recommendations": {
+    "turmeric": {
+      "growth_stage": "basal",
+      "npk_kg_ha": {"N": 25, "P2O5": 60, "K2O": 18},
+      "special_notes": "Apply 25 t/ha FYM basally; requires early Azospirillum integration.",
+      "additional": {
+        "fym_t_ha": 25,
+        "azospirillum": true
+      }
+    },
+    "sorghum_irrigated": {
+      "growth_stage": "vegetative",
+      "npk_kg_ha": {"N": 90, "P2O5": 45, "K2O": 45},
+      "special_notes": "Split N application @ 50:25:25% at 0, 15, and 30 Days After Sowing (DAS).",
+      "split_schedule": {
+        "N": [
+          {"percent": 50, "timing_das": 0},
+          {"percent": 25, "timing_das": 15},
+          {"percent": 25, "timing_das": 30}
+        ]
+      }
+    },
+    "tomato_hybrid": {
+      "growth_stage": "fertigation",
+      "npk_kg_ha": {"N": 200, "P2O5": 250, "K2O": 250},
+      "special_notes": "Split via daily water soluble fertilizers (e.g., 19:19:19, Urea) for 1 hour/day.",
+      "fertigation": {
+        "method": "drip",
+        "duration_hours_per_day": 1,
+        "fertilizer_grades": ["19:19:19", "urea", "potassium_nitrate"]
+      }
+    },
+    "groundnut_rainfed": {
+      "growth_stage": "blanket",
+      "npk_kg_ha": {"N": 25, "P2O5": 50, "K2O": 75},
+      "special_notes": "Requires 400 kg/ha Gypsum at 45 DAS to encourage pod formation.",
+      "additional": {
+        "gypsum_kg_ha": 400,
+        "gypsum_timing_das": 45
+      }
+    },
+    "african_marigold": {
+      "growth_stage": "basal_and_top",
+      "npk_kg_ha": {"N": 45, "P2O5": 90, "K2O": 75},
+      "special_notes": "Apply basal NPK, followed by 45 kg N/ha top dressing at 45 DAS.",
+      "split_schedule": {
+        "N_topdress": [
+          {"kg_ha": 45, "timing_das": 45}
+        ]
+      }
+    }
+  },
+  "micronutrient_interventions": {
+    "zinc_iron_lockout": {
+      "trigger_conditions": {
+        "soil_ph_min": 8.5,
+        "root_clustering_detected": true,
+        "deficiency_class": "micronutrient_deficiency"
+      },
+      "prescription": {
+        "foliar_spray": [
+          {"chemical": "ZnSO4", "concentration_percent": 0.5},
+          {"chemical": "FeSO4", "concentration_percent": 1.0},
+          {"chemical": "citric_acid", "concentration_percent": 0.1}
+        ],
+        "timing_dap": [60, 90, 120],
+        "application_method": "foliar"
+      }
+    },
+    "phosphorus_lockout": {
+      "trigger_conditions": {
+        "p_deficiency_detected": true,
+        "soil_p_rating": "low"
+      },
+      "prescription": {
+        "fertilizer": "superphosphate",
+        "application_method": "localized_root_zone_placement",
+        "notes": "P has extremely low mobility; broadcast application is ineffective. Must place in root interception zone."
+      }
+    },
+    "gypsum_suppression": {
+      "trigger_conditions": {
+        "crop": "groundnut",
+        "soil_calcareous": true,
+        "root_morphology_poor": true
+      },
+      "action": "suppress_gypsum",
+      "notes": "Suppress standard 400 kg/ha gypsum application to avoid calciferous toxicity and severe pH elevation."
+    }
+  },
+  "differential_adjustment_rules": {
+    "nitrogen": {
+      "soil_low_model_deficient": {"action": "increase", "factor": 1.5, "notes": "Increase N by 50%"},
+      "soil_medium_model_deficient": {"action": "increase", "factor": 1.25, "notes": "Increase N by 25%"},
+      "soil_high_model_deficient": {"action": "foliar", "notes": "Suspect lockout; switch to foliar urea spray"},
+      "soil_low_model_optimal": {"action": "standard", "notes": "Apply standard blanket recommendation"},
+      "soil_medium_model_optimal": {"action": "reduce", "factor": 0.85, "notes": "Reduce by 15%"},
+      "soil_high_model_optimal": {"action": "reduce", "factor": 0.7, "notes": "Reduce by 30%"}
+    },
+    "phosphorus": {
+      "soil_low_model_deficient": {"action": "increase", "factor": 1.5, "method": "root_zone_placement"},
+      "soil_medium_model_deficient": {"action": "increase", "factor": 1.25, "method": "root_zone_placement"},
+      "soil_high_model_deficient": {"action": "foliar", "notes": "Suspect pH lockout; foliar DAP spray"},
+      "soil_low_model_optimal": {"action": "standard"},
+      "soil_medium_model_optimal": {"action": "reduce", "factor": 0.85},
+      "soil_high_model_optimal": {"action": "reduce", "factor": 0.7}
+    },
+    "potassium": {
+      "soil_low_model_deficient": {"action": "increase", "factor": 1.5},
+      "soil_medium_model_deficient": {"action": "foliar", "notes": "Suspect lockout; foliar KNO3 spray"},
+      "soil_high_model_deficient": {"action": "foliar", "notes": "Lockout event; bypass soil matrix"},
+      "soil_low_model_optimal": {"action": "standard"},
+      "soil_medium_model_optimal": {"action": "reduce", "factor": 0.85},
+      "soil_high_model_optimal": {"action": "reduce", "factor": 0.7}
+    }
+  }
+}

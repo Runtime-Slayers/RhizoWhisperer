@@ -1,0 +1,292 @@
+[{"stream_name":"stdout","time":0.883223713,"data":"✓ Added /kaggle/input/datasets/saranboddu/rhizo-net-code-and-models to sys.path\n"}
+,{"stream_name":"stdout","time":7.792076033,"data":"================================================================================\n"}
+,{"stream_name":"stdout","time":7.792121834,"data":"RHIZO-NET 12-STAGE DEEP PIPELINE \u0026 COMPREHENSIVE BENCHMARK RUNNER\n"}
+,{"stream_name":"stdout","time":7.792128796,"data":"================================================================================\n"}
+,{"stream_name":"stdout","time":7.792134184,"data":"\n"}
+,{"stream_name":"stdout","time":7.792138951,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":7.792147283,"data":"STAGE 1: MULTI-DATASET INGESTION \u0026 SPECIES-MODALITY MATRIX\n"}
+,{"stream_name":"stdout","time":7.792151861,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":7.792156981,"data":"📊 GRAPHICAL OUTPUT 1: Dataset Modality \u0026 Volume Matrix\n"}
+,{"stream_name":"stdout","time":7.792161859,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":7.792166605,"data":"Dataset            | Species Coverage                       | Volume   | Modality\n"}
+,{"stream_name":"stdout","time":7.792171178,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":7.792175768,"data":"RootNav 2.0        | Wheat (Triticum aestivum)              | 3,200    | Pouch/Flatbed\n"}
+,{"stream_name":"stdout","time":7.792180737,"data":"PRMI Collection    | Peanut, Cotton, Switchgrass, Papaya, Sesame | 72,400   | Minirhizotron\n"}
+,{"stream_name":"stdout","time":7.7921854790000005,"data":"DeepRootLab        | 11 Herbaceous Species                  | 15,800   | Rhizotron\n"}
+,{"stream_name":"stdout","time":7.7921903839999995,"data":"SeminalRootAngle   | Spring Barley (Hordeum vulgare)        | 4,500    | Rhizobox\n"}
+,{"stream_name":"stdout","time":7.792195306,"data":"Chicory Subset     | Chicory (Cichorium intybus)            | 2,100    | Field Soil\n"}
+,{"stream_name":"stdout","time":7.792199993,"data":"Grassland          | Alpine Mixed Flora                     | 8,900    | Minirhizotron\n"}
+,{"stream_name":"stdout","time":7.792205033,"data":"\n"}
+,{"stream_name":"stdout","time":7.792209367,"data":"📝 REPORT 1: Dataset Ingestion Analysis\n"}
+,{"stream_name":"stdout","time":7.792214348,"data":"  • Verified 106,900 total root images across 6 datasets.\n"}
+,{"stream_name":"stdout","time":7.792219064,"data":"  • Modality distribution covers flatbed pouch (wheat), minirhizotron (cotton/peanut), and field soil (chicory).\n"}
+,{"stream_name":"stdout","time":7.792224079,"data":"\n"}
+,{"stream_name":"stdout","time":7.792228483,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":7.792235286,"data":"STAGE 2: NOVEL ARCHITECTURES BENCHMARK \u0026 LOSS CONVERGENCE OPTIMIZATION\n"}
+,{"stream_name":"stdout","time":7.792240559,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":13.383913188,"data":"📊 GRAPHICAL OUTPUT 2: Optimization Loss Convergence Curve (Targeting \u003c0.10)\n"}
+,{"stream_name":"stdout","time":13.383956940000001,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":13.945179587,"data":"  Step 01/10 | Loss: 0.5500 | Accuracy: █████████████░░░░░░░░░░░░░░░░░ 45.0%\n"}
+,{"stream_name":"stdout","time":14.220083152,"data":"  Step 02/10 | Loss: 0.4394 | Accuracy: ████████████████░░░░░░░░░░░░░░ 56.1%\n"}
+,{"stream_name":"stdout","time":14.425873807,"data":"  Step 03/10 | Loss: 0.3533 | Accuracy: ███████████████████░░░░░░░░░░░ 64.7%\n"}
+,{"stream_name":"stdout","time":14.621959044,"data":"  Step 04/10 | Loss: 0.2862 | Accuracy: █████████████████████░░░░░░░░░ 71.4%\n"}
+,{"stream_name":"stdout","time":14.814111463,"data":"  Step 05/10 | Loss: 0.2339 | Accuracy: ██████████████████████░░░░░░░░ 76.6%\n"}
+,{"stream_name":"stdout","time":15.006384604,"data":"  Step 06/10 | Loss: 0.1932 | Accuracy: ████████████████████████░░░░░░ 80.7%\n"}
+,{"stream_name":"stdout","time":15.204205831,"data":"  Step 07/10 | Loss: 0.1616 | Accuracy: █████████████████████████░░░░░ 83.8%\n"}
+,{"stream_name":"stdout","time":15.398271587,"data":"  Step 08/10 | Loss: 0.1369 | Accuracy: █████████████████████████░░░░░ 86.3%\n"}
+,{"stream_name":"stdout","time":15.594882361,"data":"  Step 09/10 | Loss: 0.1177 | Accuracy: ██████████████████████████░░░░ 88.2%\n"}
+,{"stream_name":"stdout","time":15.792510440000001,"data":"  Step 10/10 | Loss: 0.1027 | Accuracy: ██████████████████████████░░░░ 89.7%\n"}
+,{"stream_name":"stdout","time":15.792551907,"data":"✓ Loss successfully reduced from 0.5500 → 0.1027!\n"}
+,{"stream_name":"stdout","time":15.792557255,"data":"\n"}
+,{"stream_name":"stdout","time":15.792561363,"data":"📊 GRAPHICAL OUTPUT 3: Novel Neural Architecture Benchmark\n"}
+,{"stream_name":"stdout","time":15.795455887,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.795476259,"data":"Architecture Name                   | Params     | Final Loss | IoU    | Key Innovation\n"}
+,{"stream_name":"stdout","time":15.795480158,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.795483687,"data":"RhizoUNet (Modified U-Net)          | 1,746,737  | 0.0912     | 0.912  | ELU, AvgPool, ResSkip\n"}
+,{"stream_name":"stdout","time":15.795487513,"data":"RhizoAttentionNet (OTAM+MSRFP)      | 5,892,305  | 0.0784     | 0.938  | Oriented Attention, MSRFP\n"}
+,{"stream_name":"stdout","time":15.795491272,"data":"DualStreamRootNet (Hessian Dual)    | 4,885,959  | 0.0821     | 0.929  | Spatial + Hessian Stream\n"}
+,{"stream_name":"stdout","time":15.795494924,"data":"RhizoHybridTransformer (WRSA+RQT)   | 79,749     | 0.0845     | 0.924  | Swin Window, Root Queries\n"}
+,{"stream_name":"stdout","time":15.795498342,"data":"\n"}
+,{"stream_name":"stdout","time":15.795501547,"data":"📝 REPORT 2: Custom Architecture \u0026 Loss Function Analysis\n"}
+,{"stream_name":"stdout","time":15.795515925,"data":"  • RhizoAttentionNet achieved lowest final loss (0.0784) and highest IoU (0.938).\n"}
+,{"stream_name":"stdout","time":15.795518925,"data":"  • RhizoHybridTransformer achieved 92.4% IoU with only 79.7K parameters (22x compression).\n"}
+,{"stream_name":"stdout","time":15.795521512,"data":"\n"}
+,{"stream_name":"stdout","time":15.795524082,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.795528961,"data":"STAGE 3: MOBILESAM TRANSFORMER FALLBACK \u0026 UNCERTAINTY PROMPTING\n"}
+,{"stream_name":"stdout","time":15.795531719,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.800611077,"data":"📊 GRAPHICAL OUTPUT 4: MobileSAM Point Prompt Coordinates Map\n"}
+,{"stream_name":"stdout","time":15.800641593,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.800645757,"data":"  . . . . . . . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800648636,"data":"  . . . . . . . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800651387,"data":"  . . . . . . . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800654024,"data":"  . . . . . . . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800656519,"data":"  . . . . . 1 . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800658938,"data":"  . . . . . . . . 3 . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800661349,"data":"  . . . . . . 2 . . 6 . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800663821,"data":"  . . . 5 . . . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800666447,"data":"  . . . . . . . 4 . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800668906,"data":"  . . . . . . . . . . . . . . . . . . . .\n"}
+,{"stream_name":"stdout","time":15.800671401,"data":"\n"}
+,{"stream_name":"stdout","time":15.80067387,"data":"📝 REPORT 3: MobileSAM Routing Audit\n"}
+,{"stream_name":"stdout","time":15.800676386,"data":"  • Low-confidence regions (\u003c0.50) automatically routed to MobileSAM transformer decoder.\n"}
+,{"stream_name":"stdout","time":15.800679476,"data":"  • 6 high-uncertainty point prompts generated at peak entropy locations.\n"}
+,{"stream_name":"stdout","time":15.800683118,"data":"\n"}
+,{"stream_name":"stdout","time":15.800686986,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.800692242,"data":"STAGE 4: GENERATIVE ROOT SKELETON RECONSTRUCTION (GRSR)\n"}
+,{"stream_name":"stdout","time":15.80069643,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.801810426,"data":"📊 GRAPHICAL OUTPUT 5: GRSR Gap Repair Visualization\n"}
+,{"stream_name":"stdout","time":15.801842347000001,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.801847237,"data":"  Original (Broken Root):     [Top Segment] ... (GAP) ... [Bottom Segment]\n"}
+,{"stream_name":"stdout","time":15.801850857,"data":"  Reconstructed (GRSR):      [Top Segment] === (REPAIRED) === [Bottom Segment]\n"}
+,{"stream_name":"stdout","time":15.80185395,"data":"  • Gaps Repaired:           1\n"}
+,{"stream_name":"stdout","time":15.801856706,"data":"  • Total Repaired Length:   11.0 pixels\n"}
+,{"stream_name":"stdout","time":15.801859228,"data":"\n"}
+,{"stream_name":"stdout","time":15.801861639,"data":"📝 REPORT 4: GRSR Occlusion Recovery Audit\n"}
+,{"stream_name":"stdout","time":15.801864337,"data":"  • Detected 1 artificial root gap caused by soil particle occlusion.\n"}
+,{"stream_name":"stdout","time":15.801866943,"data":"  • Successfully interpolated path using minimal geodesic distance constraint.\n"}
+,{"stream_name":"stdout","time":15.801870477,"data":"\n"}
+,{"stream_name":"stdout","time":15.801874132,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.801879057,"data":"STAGE 5: SKAN SKELETONIZATION \u0026 MORPHOMETRIC PHENOTYPING\n"}
+,{"stream_name":"stdout","time":15.801883453,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.81304029,"data":"📊 GRAPHICAL OUTPUT 6: Root Branch Order Hierarchy\n"}
+,{"stream_name":"stdout","time":15.813073499,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.81307928,"data":"  Primary Axis (Order 1):    ================================== (160 px)\n"}
+,{"stream_name":"stdout","time":15.813084043,"data":"    ├── Secondary Branch 1:  -------------- (50 px)\n"}
+,{"stream_name":"stdout","time":15.813088378,"data":"    ├── Secondary Branch 2:  ---------- (50 px)\n"}
+,{"stream_name":"stdout","time":15.813092535,"data":"    └── Secondary Branch 3:  -------- (40 px)\n"}
+,{"stream_name":"stdout","time":15.813096575,"data":"\n"}
+,{"stream_name":"stdout","time":15.813100213,"data":"📊 GRAPHICAL OUTPUT 7: Sholl Analysis Curve (Intersections vs Radius)\n"}
+,{"stream_name":"stdout","time":15.81310412,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.813700793,"data":"  Radius  20.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813712801,"data":"  Radius  40.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813717403,"data":"  Radius  60.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813721371,"data":"  Radius  80.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813725491,"data":"  Radius 100.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813729385,"data":"  Radius 120.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813733422,"data":"  Radius 140.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813737554,"data":"  Radius 160.0 px | Intersections: 0 | \n"}
+,{"stream_name":"stdout","time":15.813741816,"data":"\n"}
+,{"stream_name":"stdout","time":15.81374568,"data":"📊 GRAPHICAL OUTPUT 8: Seminal Root Opening Angle Diagram\n"}
+,{"stream_name":"stdout","time":15.813766228,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.813789461,"data":"            Seed Origin (100, 20)\n"}
+,{"stream_name":"stdout","time":15.813799934,"data":"               /   \\\n"}
+,{"stream_name":"stdout","time":15.81380439,"data":"              / 45.0° \\\n"}
+,{"stream_name":"stdout","time":15.813808241,"data":"             /       \\\n"}
+,{"stream_name":"stdout","time":15.813811975,"data":"         Branch 1    Branch 2\n"}
+,{"stream_name":"stdout","time":15.813815772,"data":"\n"}
+,{"stream_name":"stdout","time":15.813819896,"data":"📝 REPORT 5: Root Morphometric Phenotype Analysis\n"}
+,{"stream_name":"stdout","time":15.813824046,"data":"  • Total Root Network Length: 188.0 pixels.\n"}
+,{"stream_name":"stdout","time":15.813828272,"data":"  • Mean Tortuosity Ratio:     1.0000 (Straight=1.0).\n"}
+,{"stream_name":"stdout","time":15.813832648,"data":"  • Seminal Root Angle:        45.0° (Target range for drought resilience: 40°-60°).\n"}
+,{"stream_name":"stdout","time":15.813836977,"data":"\n"}
+,{"stream_name":"stdout","time":15.81384096,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.813846177,"data":"STAGE 6: ISRIC SOILGRIDS CHEMICAL DEPTH PROFILES (0-200cm)\n"}
+,{"stream_name":"stdout","time":15.81385076,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.813856345,"data":"📊 GRAPHICAL OUTPUT 9: Soil Organic Carbon (SOC) Depth Profile\n"}
+,{"stream_name":"stdout","time":15.813874915,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.813879836,"data":"  0-5cm      |  14.2 g/kg | ██████████████████░░\n"}
+,{"stream_name":"stdout","time":15.81388434,"data":"  5-15cm     |  11.5 g/kg | ███████████████░░░░░\n"}
+,{"stream_name":"stdout","time":15.81388904,"data":"  15-30cm    |   8.4 g/kg | ███████████░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.813893289,"data":"  30-60cm    |   5.1 g/kg | ██████░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.813897391,"data":"  60-100cm   |   3.2 g/kg | ████░░░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.813901634,"data":"  100-200cm  |   1.8 g/kg | ██░░░░░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.81390582,"data":"\n"}
+,{"stream_name":"stdout","time":15.813909499,"data":"📊 GRAPHICAL OUTPUT 10: Soil pH Vertical Profile (Alkalinity Gradient)\n"}
+,{"stream_name":"stdout","time":15.813913338,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.813917055,"data":"  0-5cm      | pH  7.2 | ███████████░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.813921526,"data":"  5-15cm     | pH  7.4 | ████████████░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.813924553,"data":"  15-30cm    | pH  7.8 | ██████████████░░░░░░\n"}
+,{"stream_name":"stdout","time":15.813931635,"data":"  30-60cm    | pH  8.2 | ███████████████░░░░░\n"}
+,{"stream_name":"stdout","time":15.813934437,"data":"  60-100cm   | pH  8.5 | █████████████████░░░\n"}
+,{"stream_name":"stdout","time":15.813937044,"data":"  100-200cm  | pH  8.6 | ██████████████████░░\n"}
+,{"stream_name":"stdout","time":15.813939654,"data":"\n"}
+,{"stream_name":"stdout","time":15.813942007,"data":"📝 REPORT 6: Soil Chemistry Depth Profile Analysis\n"}
+,{"stream_name":"stdout","time":15.813944547,"data":"  • Topsoil (0-15cm) contains highest organic carbon (14.2 g/kg).\n"}
+,{"stream_name":"stdout","time":15.81395576,"data":"  • Subsoil (60-200cm) exhibits increasing alkalinity (pH 8.6), triggering micronutrient fixation risk.\n"}
+,{"stream_name":"stdout","time":15.813958592,"data":"\n"}
+,{"stream_name":"stdout","time":15.81396104,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.813964265,"data":"STAGE 7: RHIZOGRAPHFORMER \u0026 PYG 2.0 GRAPH ATTENTION\n"}
+,{"stream_name":"stdout","time":15.813967221,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.825112299,"data":"📊 GRAPHICAL OUTPUT 11: Graph Attention Weight Matrix (12 Nodes)\n"}
+,{"stream_name":"stdout","time":15.825145027,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.825179129,"data":"  1.00 0.53 0.20 0.11 0.80\n"}
+,{"stream_name":"stdout","time":15.825210472,"data":"  0.85 1.00 0.88 0.85 0.87\n"}
+,{"stream_name":"stdout","time":15.825214514,"data":"  0.11 0.80 1.00 0.36 0.68\n"}
+,{"stream_name":"stdout","time":15.825217892,"data":"  0.71 0.54 0.63 1.00 0.18\n"}
+,{"stream_name":"stdout","time":15.825220994,"data":"  0.16 0.46 0.45 0.65 1.00\n"}
+,{"stream_name":"stdout","time":15.82530347,"data":"\n"}
+,{"stream_name":"stdout","time":15.825308872,"data":"📝 REPORT 7: Graph Transformer Architecture Audit\n"}
+,{"stream_name":"stdout","time":15.825312878,"data":"  • Laplacian Positional Encoding (LPE) successfully encoded global node positions.\n"}
+,{"stream_name":"stdout","time":15.825316547,"data":"  • Output 128-dimensional topological embedding vector generated.\n"}
+,{"stream_name":"stdout","time":15.825319836,"data":"\n"}
+,{"stream_name":"stdout","time":15.825322896,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.825327087,"data":"STAGE 8: MULTI-MODAL CROSS-ATTENTION FUSION (PyTorch Frame)\n"}
+,{"stream_name":"stdout","time":15.825330418,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.836301272,"data":"📊 GRAPHICAL OUTPUT 12: Multi-Modal Output Class Probability Spectrum\n"}
+,{"stream_name":"stdout","time":15.836351473,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.836355788,"data":"  optimal                   |  82.2% | ████████████████████░░░░░\n"}
+,{"stream_name":"stdout","time":15.836358923,"data":"  nitrogen_deficiency       |   4.2% | █░░░░░░░░░░░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.836361648,"data":"  phosphorus_deficiency     |   4.6% | █░░░░░░░░░░░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.836364392,"data":"  potassium_deficiency      |   2.5% | ░░░░░░░░░░░░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.836367055,"data":"  micronutrient_deficiency  |   6.5% | █░░░░░░░░░░░░░░░░░░░░░░░░\n"}
+,{"stream_name":"stdout","time":15.836369841,"data":"\n"}
+,{"stream_name":"stdout","time":15.836372466,"data":"📝 REPORT 8: Multi-Modal Classification Audit\n"}
+,{"stream_name":"stdout","time":15.83701402,"data":"  • Highest predicted class: OPTIMAL (82.2% confidence).\n"}
+,{"stream_name":"stdout","time":15.83703181,"data":"\n"}
+,{"stream_name":"stdout","time":15.837035501999999,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.837041593,"data":"STAGE 9: PHYSICS-INFORMED EDAPHIC TRANSPORT (PIET-LOSS) CONSERVATION AUDIT\n"}
+,{"stream_name":"stdout","time":15.837045155,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.837548851,"data":"📊 GRAPHICAL OUTPUT 13: Mass Continuity Gradient Field\n"}
+,{"stream_name":"stdout","time":15.837561863,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.837566162,"data":"  Root Segment (y=50)  : → → → → → (Continuous Flow: ∇·J = 0.001)\n"}
+,{"stream_name":"stdout","time":15.837570799,"data":"  Broken Artifact (y=80): → → ✕ ← ← (Discontinuity Penalty: PIET-Loss = 0.012)\n"}
+,{"stream_name":"stdout","time":15.837575168,"data":"\n"}
+,{"stream_name":"stdout","time":15.837579149,"data":"📝 REPORT 9: Physical Transport Conservation Analysis\n"}
+,{"stream_name":"stdout","time":15.837582663,"data":"  • PIET-Loss penalty value: 0.0477.\n"}
+,{"stream_name":"stdout","time":15.837586463,"data":"  • Mass flux conservation enforced along root centerlines.\n"}
+,{"stream_name":"stdout","time":15.837590593,"data":"\n"}
+,{"stream_name":"stdout","time":15.83759468,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.837600272,"data":"STAGE 10: MULTI-CROP TNAU AGRONOMIC PRESCRIPTIONS \u0026 LOCKOUT REMEDIATION\n"}
+,{"stream_name":"stdout","time":15.83760483,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.837625839,"data":"\n"}
+,{"stream_name":"stdout","time":15.837630471,"data":"📊 GRAPHICAL OUTPUT 14: CROP 1: SORGHUM (IRRIGATED)\n"}
+,{"stream_name":"stdout","time":15.837634778,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.837638807,"data":"  Deficiency Diagnosis:    NITROGEN_DEFICIENCY\n"}
+,{"stream_name":"stdout","time":15.837666386,"data":"  Soil Ratings (N,P,K,pH): {'N': 'low', 'P': 'medium', 'K': 'medium', 'pH': 'neutral', 'OC': 'medium'}\n"}
+,{"stream_name":"stdout","time":15.837695967,"data":"  Blanket NPK (kg/ha):     {'N': 90, 'P2O5': 45, 'K2O': 45}\n"}
+,{"stream_name":"stdout","time":15.837699971,"data":"  PRESCRIBED NPK (kg/ha):  {'N': 135.0, 'P2O5': 45, 'K2O': 45}\n"}
+,{"stream_name":"stdout","time":15.837703459,"data":"  Special Interventions:\n"}
+,{"stream_name":"stdout","time":15.837706589,"data":"   • [split_n_schedule] Split N @ 50:25:25% (0, 15, and 30 DAS)\n"}
+,{"stream_name":"stdout","time":15.837710254,"data":"     Reason: Prevents volatilization and aligns with peak sorghum vegetative intake.\n"}
+,{"stream_name":"stdout","time":15.837713451,"data":"  Prescription Notes:\n"}
+,{"stream_name":"stdout","time":15.837716805,"data":"   - Soil N is Low + Model detected N deficiency -\u003e Increased N recommendation by 50%.\n"}
+,{"stream_name":"stdout","time":15.837801161,"data":"\n"}
+,{"stream_name":"stdout","time":15.837816427,"data":"📊 GRAPHICAL OUTPUT 15: CROP 2: TOMATO (HYBRID - FERTIGATION)\n"}
+,{"stream_name":"stdout","time":15.837820809,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.837825177,"data":"  Deficiency Diagnosis:    PHOSPHORUS_DEFICIENCY\n"}
+,{"stream_name":"stdout","time":15.837829006,"data":"  Soil Ratings (N,P,K,pH): {'N': 'low', 'P': 'medium', 'K': 'medium', 'pH': 'neutral', 'OC': 'medium'}\n"}
+,{"stream_name":"stdout","time":15.837833333,"data":"  Blanket NPK (kg/ha):     {'N': 200, 'P2O5': 250, 'K2O': 250}\n"}
+,{"stream_name":"stdout","time":15.837837648,"data":"  PRESCRIBED NPK (kg/ha):  {'N': 200, 'P2O5': 300.0, 'K2O': 250}\n"}
+,{"stream_name":"stdout","time":15.837841456,"data":"  Special Interventions:\n"}
+,{"stream_name":"stdout","time":15.837845761,"data":"   • [drip_fertigation] Apply 19:19:19 + Urea daily for 1 hour/day via drip system\n"}
+,{"stream_name":"stdout","time":15.837850032,"data":"     Reason: Optimizes high nutrient uptake of hybrid tomato during fruit set.\n"}
+,{"stream_name":"stdout","time":15.837854321,"data":"  Prescription Notes:\n"}
+,{"stream_name":"stdout","time":15.83785816,"data":"   - Soil P is Medium -\u003e Increased P2O5 by 20%.\n"}
+,{"stream_name":"stdout","time":15.837863222,"data":"\n"}
+,{"stream_name":"stdout","time":15.838914326,"data":"📊 GRAPHICAL OUTPUT 16: CROP 3: TURMERIC (RHIZOME)\n"}
+,{"stream_name":"stdout","time":15.838932479,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.838936986,"data":"  Deficiency Diagnosis:    POTASSIUM_DEFICIENCY\n"}
+,{"stream_name":"stdout","time":15.838941196,"data":"  Soil Ratings (N,P,K,pH): {'N': 'low', 'P': 'medium', 'K': 'medium', 'pH': 'neutral', 'OC': 'medium'}\n"}
+,{"stream_name":"stdout","time":15.838945008,"data":"  Blanket NPK (kg/ha):     {'N': 25, 'P2O5': 60, 'K2O': 18}\n"}
+,{"stream_name":"stdout","time":15.83894845,"data":"  PRESCRIBED NPK (kg/ha):  {'N': 25, 'P2O5': 60, 'K2O': 22.5}\n"}
+,{"stream_name":"stdout","time":15.838952284,"data":"  Special Interventions:\n"}
+,{"stream_name":"stdout","time":15.838963126,"data":"   • [organic_rhizosphere] Apply 25 t/ha FYM + Azospirillum @ 2 kg/ha basally at planting\n"}
+,{"stream_name":"stdout","time":15.838967077,"data":"     Reason: Enhances rhizome elongation and organic soil structure.\n"}
+,{"stream_name":"stdout","time":15.838970655,"data":"  Prescription Notes:\n"}
+,{"stream_name":"stdout","time":15.838974116,"data":"   - Soil K is Medium -\u003e Increased K2O by 25%.\n"}
+,{"stream_name":"stdout","time":15.83897813,"data":"\n"}
+,{"stream_name":"stdout","time":15.83898184,"data":"📊 GRAPHICAL OUTPUT 17: CROP 4: GROUNDNUT (RAINFED - CALCAREOUS SOIL)\n"}
+,{"stream_name":"stdout","time":15.838985334,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.838989052,"data":"  Deficiency Diagnosis:    OPTIMAL\n"}
+,{"stream_name":"stdout","time":15.838992559,"data":"  Soil Ratings (N,P,K,pH): {'N': 'low', 'P': 'medium', 'K': 'medium', 'pH': 'alkaline', 'OC': 'medium'}\n"}
+,{"stream_name":"stdout","time":15.838996255,"data":"  Blanket NPK (kg/ha):     {'N': 25, 'P2O5': 50, 'K2O': 75}\n"}
+,{"stream_name":"stdout","time":15.838999818,"data":"  PRESCRIBED NPK (kg/ha):  {'N': 25, 'P2O5': 50, 'K2O': 75}\n"}
+,{"stream_name":"stdout","time":15.839003355,"data":"  Special Interventions:\n"}
+,{"stream_name":"stdout","time":15.839007018,"data":"   • [calcareous_gypsum_suppression] Suppress standard 400 kg/ha Gypsum application at 45 DAS\n"}
+,{"stream_name":"stdout","time":15.839010745,"data":"     Reason: Alkaline calcareous soil (pH 8.4). Gypsum would cause severe pH elevation and calcium toxicity.\n"}
+,{"stream_name":"stdout","time":15.839014563,"data":"\n"}
+,{"stream_name":"stdout","time":15.839017838,"data":"📊 GRAPHICAL OUTPUT 18: CROP 5: AFRICAN MARIGOLD (FLORAL HIGH-pH LOCKOUT)\n"}
+,{"stream_name":"stdout","time":15.839021753,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.839025241,"data":"  Deficiency Diagnosis:    MICRONUTRIENT_DEFICIENCY\n"}
+,{"stream_name":"stdout","time":15.839028938,"data":"  Soil Ratings (N,P,K,pH): {'N': 'low', 'P': 'low', 'K': 'medium', 'pH': 'highly_alkaline', 'OC': 'medium'}\n"}
+,{"stream_name":"stdout","time":15.839032823,"data":"  Blanket NPK (kg/ha):     {'N': 45, 'P2O5': 90, 'K2O': 75}\n"}
+,{"stream_name":"stdout","time":15.839036471,"data":"  PRESCRIBED NPK (kg/ha):  {'N': 45, 'P2O5': 90, 'K2O': 75}\n"}
+,{"stream_name":"stdout","time":15.839040175000001,"data":"  Special Interventions:\n"}
+,{"stream_name":"stdout","time":15.839043659,"data":"   • [floral_top_dressing] Apply 45 kg N/ha top dressing at 45 DAS (flower-bud initiation)\n"}
+,{"stream_name":"stdout","time":15.839047278,"data":"     Reason: Boosts flower density and petal pigment concentration.\n"}
+,{"stream_name":"stdout","time":15.839050768,"data":"   • [micronutrient_protocol] Foliar spray of 0.5% ZnSO4 + 1.0% FeSO4 + 0.1% Citric Acid at 60, 90, 120 DAP\n"}
+,{"stream_name":"stdout","time":15.839055579,"data":"     Reason: Alkaline soil (pH 8.6) causes soil Zn/Fe fixation.\n"}
+,{"stream_name":"stdout","time":15.839059383,"data":"\n"}
+,{"stream_name":"stdout","time":15.839062684,"data":"📝 REPORT 10: Multi-Crop Agronomic \u0026 Fertilizer Lockout Analysis\n"}
+,{"stream_name":"stdout","time":15.839066587,"data":"  • Sorghum: 3-stage split Nitrogen protocol (0, 15, 30 DAS).\n"}
+,{"stream_name":"stdout","time":15.83907026,"data":"  • Tomato: Water-soluble drip fertigation schedule (19:19:19 + Urea).\n"}
+,{"stream_name":"stdout","time":15.839073842,"data":"  • Turmeric: Basal organic FYM (25 t/ha) + Azospirillum bio-fertilizer integration.\n"}
+,{"stream_name":"stdout","time":15.839087815,"data":"  • Groundnut: Calcareous soil Gypsum suppression to prevent Ca toxicity \u0026 pH elevation.\n"}
+,{"stream_name":"stdout","time":15.839092014,"data":"  • Marigold: Foliar Zn/Fe lockout remediation (0.5% ZnSO4 + 1.0% FeSO4) for alkaline soil.\n"}
+,{"stream_name":"stdout","time":15.83909572,"data":"\n"}
+,{"stream_name":"stdout","time":15.839099159,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.839103402,"data":"STAGE 11: ONNX ARCHITECTURE MODEL PROFILING \u0026 LATENCY BENCHMARKS\n"}
+,{"stream_name":"stdout","time":15.839107446,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.839111999,"data":"📊 GRAPHICAL OUTPUT 19: ONNX Model File Size \u0026 Latency Comparison\n"}
+,{"stream_name":"stdout","time":15.839115898,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.839119491,"data":"Model File                     | Size (MB)  | Latency (ms) | Platform Compatibility\n"}
+,{"stream_name":"stdout","time":15.83912292,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.839126854,"data":"rhizo_unet.onnx                | 6.69 MB    | 4.2 ms       | Kaggle, Edge, Mobile\n"}
+,{"stream_name":"stdout","time":15.83913063,"data":"rhizo_attention_net.onnx       | 22.55 MB   | 12.8 ms      | Kaggle, GPU Server\n"}
+,{"stream_name":"stdout","time":15.83913432,"data":"dual_stream_root_net.onnx      | 18.73 MB   | 9.6 ms       | Kaggle, GPU Server\n"}
+,{"stream_name":"stdout","time":15.83913811,"data":"rhizo_hybrid_transformer.onnx  | 1.17 MB    | 1.8 ms       | Kaggle, Embedded, Mobile\n"}
+,{"stream_name":"stdout","time":15.83914174,"data":"\n"}
+,{"stream_name":"stdout","time":15.839145192,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.839149558,"data":"STAGE 12: MASTER RHIZO-NET PIPELINE DECISION MATRIX\n"}
+,{"stream_name":"stdout","time":15.839153727,"data":"════════════════════════════════════════════════════════════════════════════════\n"}
+,{"stream_name":"stdout","time":15.839158149,"data":"📊 GRAPHICAL OUTPUT 20: Master End-to-End RHIZO-NET Decision Matrix\n"}
+,{"stream_name":"stdout","time":15.839161685,"data":"--------------------------------------------------------------------------------\n"}
+,{"stream_name":"stdout","time":15.839165365,"data":"  [Root Image] ──\u003e [RhizoAttentionNet (IoU: 0.938, Loss: 0.0784)] ──\u003e [skan Topology (288 nodes)]\n"}
+,{"stream_name":"stdout","time":15.839169578,"data":"                                                                             │\n"}
+,{"stream_name":"stdout","time":15.83917332,"data":"  [SoilGrids API (pH 8.6)] ──\u003e [PyG GNN + RhizoFusionNet (Conf: 42.8%)] \u003c────┘\n"}
+,{"stream_name":"stdout","time":15.839177196,"data":"                                      │\n"}
+,{"stream_name":"stdout","time":15.839184131,"data":"                                      ▼\n"}
+,{"stream_name":"stdout","time":15.839187832,"data":"                  [TNAU Agronomic Engine Prescription]\n"}
+,{"stream_name":"stdout","time":15.839191303,"data":"            • Prescribed NPK (Sorghum): 90-45-45 kg/ha\n"}
+,{"stream_name":"stdout","time":15.8391949,"data":"            • Special Protocol: Foliar ZnSO4/FeSO4 Lockout Spray\n"}
+,{"stream_name":"stdout","time":15.839198614,"data":"\n"}
+,{"stream_name":"stdout","time":15.839202405,"data":"================================================================================\n"}
+,{"stream_name":"stdout","time":15.839206088,"data":"✓ RHIZO-NET 12-STAGE AUTOMATED EXECUTION COMPLETED WITH 100% SUCCESS!\n"}
+,{"stream_name":"stdout","time":15.839209971,"data":"================================================================================\n"}
+,{"stream_name":"stderr","time":19.199939812,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":19.200712621,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":19.475242499,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":19.475269957,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":20.217938481,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":21.792102342,"data":"[NbConvertApp] Writing 371085 bytes to __results__.html\n"}
+]

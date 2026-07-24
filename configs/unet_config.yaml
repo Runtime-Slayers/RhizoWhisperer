@@ -1,0 +1,98 @@
+# U-Net Configuration for Root Segmentation
+# RHIZO-NET: Modified U-Net with ELU, AvgPool, Residual Skip
+
+model:
+  name: "RhizoUNet"
+  in_channels: 3          # RGB input
+  out_channels: 1         # Binary segmentation mask
+  # Feature maps reduced by 4x from standard U-Net
+  # Standard: [64, 128, 256, 512, 1024]
+  # Ours:     [16, 32, 64, 128, 256]
+  features: [16, 32, 64, 128, 256]
+  activation: "elu"       # ELU instead of ReLU (prevents dying ReLU on thin roots)
+  pooling: "avg"          # AvgPool instead of MaxPool (preserves fine single-pixel roots)
+  skip_mode: "add"        # Residual (element-wise sum) instead of concatenation
+  dropout: 0.1
+
+training:
+  batch_size: 8
+  num_epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  scheduler: "cosine"
+  warmup_epochs: 5
+  
+  # Tile-based training
+  tile_size: 512          # Crop tiles from full images
+  overlap: 64             # Overlap for inference stitching
+  
+  # Loss function
+  loss:
+    type: "bce_dice"      # Composite BCE + Dice
+    bce_weight: 0.5
+    dice_weight: 0.5
+    smooth: 1.0           # Dice smoothing factor
+  
+  # Data augmentation
+  augmentation:
+    random_crop: true
+    horizontal_flip: true
+    vertical_flip: true
+    random_rotation: 15   # degrees
+    contrast_enhancement: true
+    contrast_limit: 0.3
+    brightness_limit: 0.2
+    
+  # Corrective annotation
+  corrective_annotation:
+    enabled: true
+    initial_epochs: 20    # Train from scratch first
+    correction_rounds: 5
+    
+  # Ensemble inference
+  ensemble:
+    enabled: true
+    num_checkpoints: 5    # Average last 5 checkpoints
+    
+  # MobileSAM fallback
+  mobilesam_fallback:
+    enabled: true
+    confidence_threshold: 0.5  # Route to MobileSAM if U-Net confidence < this
+
+data:
+  # Dataset paths (Kaggle offline)
+  kaggle_input_base: "/kaggle/input"
+  datasets:
+    - name: "rootnav2-wheat"
+      path: "rhizonet-rootnav2"
+      species: "wheat"
+      modality: "pouch"
+    - name: "prmi-collection"
+      path: "rhizonet-prmi"
+      species: ["peanut", "cotton", "switchgrass"]
+      modality: "minirhizotron"
+    - name: "deeprootlab"
+      path: "rhizonet-deeprootlab"
+      species: "multi-herbaceous"
+      modality: "rhizotron"
+    - name: "seminal-root-angle"
+      path: "rhizonet-seminalrootangle"
+      species: "barley"
+      modality: "rhizobox"
+    - name: "chicory-subset"
+      path: "rhizonet-chicory"
+      species: "chicory"
+      modality: "field-soil"
+    - name: "grassland"
+      path: "rhizonet-grassland"
+      species: "alpine-mixed"
+      modality: "minirhizotron"
+      
+  # Train/val/test split
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  seed: 42
+
+  # Number of dataloader workers
+  num_workers: 4

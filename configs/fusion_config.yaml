@@ -1,0 +1,106 @@
+# Multi-Modal Fusion Configuration
+# PyTorch Frame + PyG 2.0 for Relational Deep Learning
+
+model:
+  name: "RhizoFusionNet"
+  
+  # GNN Encoder (PyG 2.0 - processes root topology graph)
+  gnn:
+    type: "GAT"           # Graph Attention Network
+    in_channels: 8        # Node features (tortuosity, intensity, length, etc.)
+    hidden_channels: 64
+    out_channels: 128     # Pooled embedding dimension
+    num_layers: 3
+    heads: 4              # Multi-head attention
+    dropout: 0.2
+    pool: "mean"          # Global mean pooling
+    
+  # PyTorch Frame (multi-modal tabular fusion)
+  tensor_frame:
+    # Numerical columns (SoilGrids features)
+    numerical_features:
+      - "bulk_density"    # bdod → kg/dm³
+      - "cec"             # mmol(c)/kg → cmol(c)/kg
+      - "clay"            # g/kg → %
+      - "nitrogen"        # cg/kg → g/kg
+      - "soc"             # dg/kg → g/kg
+      - "ph"              # phh2o (no conversion)
+      - "volumetric_water"  # wv0033 (volume %)
+      # Root topology features (numerical)
+      - "mean_tortuosity"
+      - "mean_branch_length"
+      - "total_root_length"
+      - "tip_count"
+      - "junction_count"
+      - "seminal_angle"
+      - "sholl_max_intersections"
+      - "sholl_critical_radius"
+      - "mean_pixel_intensity"
+      - "stdev_pixel_intensity"
+      
+    # Embedding columns (GNN output)
+    embedding_dim: 128
+    
+    # Categorical columns
+    categorical_features:
+      - "crop_species"     # e.g., wheat, peanut, barley, sorghum, turmeric
+      - "growth_stage"     # e.g., seedling, vegetative, flowering, maturity
+      - "soil_texture"     # e.g., clay, loam, sandy, silt
+      
+    # Timestamp columns
+    timestamp_features:
+      - "planting_date"
+      - "imaging_date"
+    
+    # Architecture
+    hidden_dim: 256
+    num_layers: 3
+    attention_heads: 4
+    dropout: 0.3
+
+  # Classification head
+  classifier:
+    num_classes: 5        # Optimal, N-Def, P-Def, K-Def, Micronutrient-Def
+    class_names:
+      - "optimal"
+      - "nitrogen_deficiency"
+      - "phosphorus_deficiency"
+      - "potassium_deficiency"
+      - "micronutrient_deficiency"  # Zn/Fe combined
+
+training:
+  batch_size: 32
+  num_epochs: 50
+  learning_rate: 0.0005
+  weight_decay: 0.001
+  scheduler: "cosine"
+  warmup_epochs: 3
+  
+  # Focal Loss for imbalanced classes
+  loss:
+    type: "focal"
+    alpha: [0.2, 0.3, 0.2, 0.15, 0.15]  # Class weights
+    gamma: 2.0
+    
+  # Cross-validation
+  cv_folds: 5
+  
+data:
+  # SoilGrids depth intervals
+  depth_intervals:
+    - "0-5cm"
+    - "5-15cm"
+    - "15-30cm"
+    - "30-60cm"
+    - "60-100cm"
+    - "100-200cm"
+    
+  # Unit conversions (SoilGrids mapped units → conventional)
+  conversions:
+    bdod: 0.01            # cg/cm³ → kg/dm³ (÷100)
+    cec: 0.1              # mmol(c)/kg → cmol(c)/kg (÷10)
+    clay: 0.1             # g/kg → % (÷10)
+    nitrogen: 0.01        # cg/kg → g/kg (÷100)
+    soc: 0.1              # dg/kg → g/kg (÷10)
+    phh2o: 0.1            # pH×10 → pH (÷10)
+    wv0033: 0.1           # v‰ → v% (÷10)

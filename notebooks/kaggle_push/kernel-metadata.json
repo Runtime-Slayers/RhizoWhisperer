@@ -1,0 +1,20 @@
+{
+  "id": "saranboddu/rhizo-net-full-pipeline-execution",
+  "title": "RHIZO-NET Full Pipeline Execution",
+  "code_file": "rhizo_net_all_stages_run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "false",
+  "enable_tpu": "false",
+  "enable_internet": "false",
+  "dataset_sources": [
+    "saranboddu/rhizo-net-code-and-models",
+    "tiansz/mobilesam-model",
+    "ravirajsinh45/soil-nutrient-dataset-of-southern-indian-states",
+    "namanmanchanda/fertilizer-prediction",
+    "atharvaingle/crop-recommendation-dataset"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}
