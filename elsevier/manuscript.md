@@ -34,28 +34,9 @@ Traditional computer vision algorithms relying on intensity thresholding or edge
 
 To overcome these fundamental limitations, we propose **RhizoWhisperer (RHIZO-NET)**. RHIZO-NET bridges the gap between deep computer vision segmentation, topological graph phenotyping, subsurface edaphic chemistry profiling, and actionable agronomic decision-making.
 
-### Key Contributions
-1. **Five Novel Neural Architectures**: We design, train, and export ONNX models for `RhizoUNet`, `RhizoAttentionNet`, `DualStreamRootNet`, `RhizoHybridTransformer`, and `RhizoGraphFormer`.
-2. **Physics-Informed Edaphic Transport Loss (PIET-Loss)**: We formulate a novel differential loss term enforcing mass flux conservation along continuous root channels.
-3. **Generative Root Skeleton Reconstruction (GRSR)**: A geodesic path propagation module that reconstructs missing skeleton segments occluded by soil aggregates.
-4. **Edaphic Multi-Modal GNN Fusion**: Fusing *skan* topological graph features with ISRIC SoilGrids 0-200 cm vertical chemical profiles via PyG 2.0 GNNs.
-5. **Real-World Climate & Agronomic Deployment**: Integration of TNAU multi-crop fertilizer prescriptions, CARRS climate drought simulator, and RCS carbon sequestration credit predictors.
-
 ---
 
-## 2. Related Work
-
-### 2.1 Deep Learning for Root Segmentation
-Early root segmentation relied on tools such as RootNav 1.0 (Pound et al., 2013) which utilized user-guided semi-automated level sets. RootNav 2.0 (Yasrab et al., 2019) introduced deep CNNs for automatic root architecture navigation. However, standard UNet models lack explicit orientation mechanisms required to resolve intersecting lateral roots in complex rhizotron media.
-
-### 2.2 Topology-Preserving Losses
-Pixel-wise loss functions evaluate each pixel independently, ignoring global structural connectivity. Shit et al. (2021) introduced `clDice` (centerline Dice), which computes intersection over soft morphological skeletons. In this work, we build upon `clDice` by introducing `PIET-Loss`, incorporating physical mass continuity constraints.
-
----
-
-## 3. RHIZO-NET System Architecture & Methodology
-
-### 3.1 Custom Neural Architecture Suite & Mermaid Flowcharts
+## 2. RHIZO-NET System Architecture & Methodology
 
 ```mermaid
 flowchart TD
@@ -74,114 +55,26 @@ flowchart TD
     end
 ```
 
-#### 3.1.1 RhizoUNet (Modified U-Net)
+### 2.1 Custom Neural Architecture Suite
+
+#### 2.1.1 RhizoUNet (Modified U-Net)
 `RhizoUNet` incorporates Exponential Linear Unit (ELU) activations, Average Pooling (to prevent thin root boundary erasure), and Residual Skip Connections across encoder-decoder levels.
 
-```mermaid
-flowchart TD
-    subgraph Encoder ["RhizoUNet Encoder"]
-        In["Input Image: 128x128x3"] --> C1["Conv3x3 + ELU: 64 channels"]
-        C1 --> P1["AvgPool2d 2x2: 64x64"]
-        P1 --> C2["ConvBlock + ResSkip: 128 channels"]
-        C2 --> P2["AvgPool2d 2x2: 32x32"]
-        P2 --> C3["ConvBlock + ResSkip: 256 channels"]
-        C3 --> P3["AvgPool2d 2x2: 16x16"]
-    end
-
-    subgraph Bottleneck ["Bridge Bottleneck"]
-        P3 --> BN["ConvBlock + ELU + Dropout 0.2: 512 channels"]
-    end
-
-    subgraph Decoder ["RhizoUNet Decoder"]
-        BN --> UP1["Bilinear Upsample 2x2: 256 channels"]
-        UP1 & C3 --> CAT1["Concat Skip Connection: 512 channels"]
-        CAT1 --> DC1["ConvBlock + ELU: 256 channels"]
-        DC1 --> UP2["Bilinear Upsample 2x2: 128 channels"]
-        UP2 & C2 --> CAT2["Concat Skip Connection: 256 channels"]
-        CAT2 --> DC2["ConvBlock + ELU: 128 channels"]
-        DC2 --> UP3["Bilinear Upsample 2x2: 64 channels"]
-        UP3 & C1 --> CAT3["Concat Skip Connection: 128 channels"]
-        CAT3 --> DC3["ConvBlock + ELU: 64 channels"]
-        DC3 --> HEAD["1x1 Conv Head: 1 channel Logits"]
-    end
-```
-
-#### 3.1.2 RhizoAttentionNet (OTAM + MSRFP)
+#### 2.1.2 RhizoAttentionNet (OTAM + MSRFP)
 `RhizoAttentionNet` utilizes an Oriented Topological Attention Module (OTAM) that computes directional spatial attention across 4 cardinal angles (0°, 45°, 90°, 135°) to suppress background soil noise while highlighting fine lateral root tips.
 
-```mermaid
-flowchart TD
-    In["Input RGB Image: 128x128"] --> MSRFP["Multi-Scale Receptive Field Pyramid: Convs 3x3, 5x5, 7x7 Dilated"]
-    MSRFP --> Enc["Deep Residual Feature Extractor"]
-    Enc --> OTAM["Oriented Topological Attention Module"]
-    
-    subgraph OTAM_Detail ["OTAM Directional Gating"]
-        OTAM --> A0["0 Degree Horizontal Filter"]
-        OTAM --> A45["45 Degree Diagonal Filter"]
-        OTAM --> A90["90 Degree Vertical Filter"]
-        OTAM --> A135["135 Degree Anti-Diagonal Filter"]
-        A0 & A45 & A90 & A135 --> SoftmaxGate["Spatial Softmax Gating"]
-    end
-
-    SoftmaxGate --> GatedFeat["Gated Feature Fusion"]
-    GatedFeat --> Dec["Deep Supervision Decoder"]
-    Dec --> Head1["Auxiliary Out Head 1"]
-    Dec --> Head2["Auxiliary Out Head 2"]
-    Dec --> Final["Final 1x1 Conv Mask: 97.9% IoU"]
-```
-
-#### 3.1.3 DualStreamRootNet (Hessian Dual Stream)
+#### 2.1.3 DualStreamRootNet (Hessian Dual Stream)
 `DualStreamRootNet` combines a spatial RGB convolutional stream with a multi-scale Frangi Hessian vesselness stream ($\mathbf{H} = \begin{bmatrix} I_{xx} & I_{xy} \\ I_{yx} & I_{yy} \end{bmatrix}$) to detect tubular root structures in highly heterogenous soil backgrounds.
 
-```mermaid
-flowchart TD
-    In["Input Image: 128x128"] --> Stream1["Spatial RGB Stream: 4-Level Conv Encoder"]
-    In --> HessianFilter["Multi-Scale Frangi Hessian Filter: Eigenvalues L1 and L2"]
-    HessianFilter --> VesselnessMap["Tubular Vesselness Response Map"]
-    VesselnessMap --> Stream2["Hessian Tube Stream: 3-Level Conv Encoder"]
-    
-    Stream1 & Stream2 --> FusionGate["Cross-Stream Adaptive Fusion Gate: Alpha * Spatial + 1-Alpha * Hessian"]
-    FusionGate --> JointDecoder["Joint Feature Decoder"]
-    JointDecoder --> HeadMask["Primary Root Mask Head"]
-    JointDecoder --> HeadCenterline["Centerline Skeleton Head"]
-```
-
-#### 3.1.4 RhizoHybridTransformer (Swin + RQT)
+#### 2.1.4 RhizoHybridTransformer (Swin + RQT)
 `RhizoHybridTransformer` is an ultra-compact model (79,749 parameters, 1.17 MB ONNX size) combining Shifted-Window Swin Self-Attention (W-MSA/SW-MSA) with Root Query Tokens (RQT) for mobile and drone edge deployment.
 
-```mermaid
-flowchart TD
-    In["Input Image: 128x128"] --> PatchEmbed["Patch Embedding: Patch Size 4x4 to 32x32 Tokens"]
-    PatchEmbed --> SwinStage1["Swin Block 1: Window Self-Attention W-MSA"]
-    SwinStage1 --> SwinStage2["Swin Block 2: Shifted Window Attention SW-MSA"]
-    
-    subgraph RQT ["Root Query Tokens RQT"]
-        SwinStage2 --> RQT_Module["Root Query Cross-Attention: Learned Tokens for Root Junctions"]
-    end
-
-    RQT_Module --> LightDecoder["Lightweight Up-Projection Decoder"]
-    LightDecoder --> Head["1x1 Out Conv Head: 1.8 ms Latency"]
-```
-
-#### 3.1.5 RhizoGraphFormer (Graph Transformer + LPE)
+#### 2.1.5 RhizoGraphFormer (Graph Transformer + LPE)
 `RhizoGraphFormer` operates on extracted root skeleton graphs, utilizing Laplacian Positional Encodings (LPE) derived from normalized graph Laplacian eigenvectors ($L = D - A$) to inject global topological coordinates into multi-head cross-attention.
-
-```mermaid
-flowchart TD
-    NodeFeat["Node Coordinates and Degrees: N x 8"] --> NodeProj["Linear Node Feature Projection"]
-    GraphLaplacian["Graph Laplacian Matrix: L = D - A"] --> Eigen["Eigenvalue Decomposition: Smallest Non-Trivial Eigenvectors"]
-    Eigen --> LPE["Laplacian Positional Encoding: N x k"]
-    
-    NodeProj & LPE --> ConcatEmbed["Combined Node Representation"]
-    ConcatEmbed --> GTLayer1["Graph Transformer Layer 1: Node-Edge Attention"]
-    GTLayer1 --> GTLayer2["Graph Transformer Layer 2: Residual LayerNorm + FFN"]
-    GTLayer2 --> GlobalPool["Global Mean + Max Pooling"]
-    GlobalPool --> TopoVector["128-d Global Topological Vector"]
-```
 
 ---
 
-### 3.2 Loss Function Suite & Physics-Informed Transport (PIET-Loss)
+### 2.2 Loss Function Suite & Physics-Informed Transport (PIET-Loss)
 
 The primary loss function composite ($\mathcal{L}_{\text{total}}$) is defined as:
 
@@ -191,11 +84,9 @@ where $\mathcal{L}_{\text{PIET}}$ enforces physical mass-conservation of water/n
 
 $$\nabla \cdot \mathbf{J} = \frac{\partial J_x}{\partial x} + \frac{\partial J_y}{\partial y} = 0$$
 
-$$\mathcal{L}_{\text{PIET}} = \gamma \left( \left\| \frac{\partial \sigma(P)}{\partial x} \right\|_1 + \left\| \frac{\partial \sigma(P)}{\partial y} \right\|_1 \right)$$
-
 ---
 
-## 4. Experimental Setup & Datasets
+## 3. Experimental Setup & Datasets
 
 We evaluate RHIZO-NET across 6 multi-species root imagery datasets comprising 106,900 annotated images.
 
@@ -210,11 +101,11 @@ We evaluate RHIZO-NET across 6 multi-species root imagery datasets comprising 10
 
 ---
 
-## 5. Experimental Results & Best Version Analysis (v15)
+## 4. Experimental Results & Visual Figures
 
 In Version 15, RHIZO-NET was trained using a 20-Epoch Deep Curriculum schedule with Cosine Annealing learning rate decay ($10^{-2} \rightarrow 10^{-5}$).
 
-### 5.1 Model Architecture Comparative Performance
+### 4.1 Model Performance Comparison
 
 | Model Architecture | Parameters | ONNX Size | Latency (CPU) | Final Loss | IoU Accuracy | Key Innovation |
 |---|---|---|---|---|---|---|
@@ -225,18 +116,63 @@ In Version 15, RHIZO-NET was trained using a 20-Epoch Deep Curriculum schedule w
 
 ---
 
-## 6. Comprehensive Ablation Study (Versions 1 to 14)
+### 4.2 Experimental Output Figures
+
+![Figure 1: Dataset Modality & Image Volume Matrix](elsevier/figures/01_dataset_modality_matrix.png)
+
+![Figure 2: 20-Epoch Deep Curriculum Loss Reduction Curve](elsevier/figures/02_deep_curriculum_20epoch_loss_curve.png)
+
+![Figure 3: Neural Architecture Performance Comparison](elsevier/figures/03_architecture_benchmark_comparison.png)
+
+![Figure 4: MobileSAM Uncertainty Point Prompt Heatmap](elsevier/figures/04_mobilesam_uncertainty_heatmap.png)
+
+![Figure 5: GRSR Geodesic Gap Reconstruction Comparison](elsevier/figures/05_grsr_gap_reconstruction.png)
+
+![Figure 6: skan Skeletonization & Branch Order Hierarchy](elsevier/figures/06_skan_skeleton_and_branch_hierarchy.png)
+
+![Figure 7: Sholl Analysis Intersection Profile](elsevier/figures/07_sholl_analysis_radius_curve.png)
+
+![Figure 8: Seminal Root Opening Angle Vector Diagram](elsevier/figures/08_seminal_root_angle_vector_map.png)
+
+![Figure 9: ISRIC SoilGrids 0-200cm Chemical Depth Profile](elsevier/figures/09_soilgrids_depth_profile_curves.png)
+
+![Figure 10: RhizoGraphFormer Attention Weight Heatmap](elsevier/figures/10_graph_transformer_attention_heatmap.png)
+
+![Figure 11: Multi-Modal Nutrient Deficiency Class Probabilities](elsevier/figures/11_multimodal_class_probability_spectrum.png)
+
+![Figure 12: PIET-Loss Mass Flux Gradient Field Map](elsevier/figures/12_piet_loss_mass_conservation_map.png)
+
+![Figure 13: Sorghum Split-N Prescription Card](elsevier/figures/13_crop1_sorghum_npk_prescription_card.png)
+
+![Figure 14: Tomato Drip Fertigation Flow Card](elsevier/figures/14_crop2_tomato_drip_fertigation_card.png)
+
+![Figure 15: Turmeric Basal Organic FYM Prescription Card](elsevier/figures/15_crop3_turmeric_organic_fym_card.png)
+
+![Figure 16: Groundnut Calcareous Gypsum Suppression Card](elsevier/figures/16_crop4_groundnut_calcareous_suppression_card.png)
+
+![Figure 17: Marigold Foliar Zn/Fe Lockout Remediation Card](elsevier/figures/17_crop5_marigold_floral_lockout_card.png)
+
+![Figure 18: ONNX Model File Size vs Latency Profile](elsevier/figures/18_onnx_architecture_latency_profile.png)
+
+![Figure 19: End-to-End Root Segmentation Triptych](elsevier/figures/19_end_to_end_root_segmentation_triptych.png)
+
+![Figure 20: RHIZO-NET Master Architecture Infographic](elsevier/figures/20_rhizo_net_master_pipeline_infographic.png)
+
+![Figure 21: CARRS Climate Drought Resilience Simulation](elsevier/figures/21_carrs_climate_drought_simulation.png)
+
+![Figure 22: RCS Rhizosphere Carbon Sequestration Depth Map](elsevier/figures/22_rcs_carbon_sequestration_depth_map.png)
+
+![Figure 23: Real-World Economic ROI & Farmer Savings Card](elsevier/figures/23_economic_roi_farmer_savings_card.png)
+
+![Figure 24: Hyper-Precise Loss Reduction Comparison](elsevier/figures/24_hyper_precise_loss_reduction_spectrum.png)
+
+![Figure 25: RHIZO-NET Ultimate Agro-Technology Dashboard](elsevier/figures/25_rhizo_net_ultimate_dashboard.png)
+
+---
+
+## 5. Comprehensive Ablation Study (Versions 1 to 14)
 
 To systematically evaluate the impact of each architectural component, loss term, and hardware pipeline optimization, we performed a thorough ablation study across all 15 versions executed on Kaggle.
-
-```mermaid
-flowchart LR
-    v1_5["v1 - v5: Baseline U-Net & CPU Fallback\nLoss: 0.6322 | IoU: 72.4%"] --> v6_10["v6 - v10: clDice + SoilGrids + skan\nLoss: 0.1027 | IoU: 89.7%"]
-    v6_10 --> v11_14["v11 - v14: GraphTransformer + PIET + GRSR\nLoss: 0.0784 | IoU: 93.8%"]
-    v11_14 --> v15["v15: 20-Epoch Deep Curriculum\nLoss: 0.0412 | IoU: 97.9%"]
-```
-
-### 6.1 Version Progression & Results Breakdown
 
 | Version Phase | Models & Modules Introduced | Loss Function Terms | Final Loss | IoU Accuracy | Key Findings & Technical Progress |
 |---|---|---|---|---|---|
@@ -250,7 +186,7 @@ flowchart LR
 
 ---
 
-## 7. Data & Code Availability
+## 6. Data & Code Availability
 
 - **GitHub Main Repository**: [https://github.com/Runtime-Slayers/RhizoWhisperer](https://github.com/Runtime-Slayers/RhizoWhisperer)
 - **GitHub Model Architectures Repository**: [https://github.com/Runtime-Slayers/RhizoWhisperer-Model-Architectures](https://github.com/Runtime-Slayers/RhizoWhisperer-Model-Architectures)
@@ -259,7 +195,7 @@ flowchart LR
 
 ---
 
-## 8. Conclusion
+## 7. Conclusion
 
 We presented **RhizoWhisperer (RHIZO-NET)**, an end-to-end deep learning and edaphic topology optimization framework for computational root phenotyping. By combining custom neural architectures (`RhizoAttentionNet`, `RhizoHybridTransformer`, `RhizoGraphFormer`), novel physics-informed losses (`PIET-Loss`), skeleton gap reconstruction (GRSR), SoilGrids chemical profiling, and TNAU agronomic recommendation engines, RHIZO-NET bridges the gap between deep vision models and real-world agricultural decision support.
 
