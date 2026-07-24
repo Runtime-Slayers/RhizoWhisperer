@@ -27,7 +27,7 @@ Evaluated across **106,900 images** from six benchmark datasets (RootNav 2.0, PR
 ## Highlights
 
 - Five novel neural architectures purpose-built for root segmentation, including RhizoAttentionNet (97.9% IoU) and ultra-lightweight RhizoHybridTransformer (79.7K params, 1.8 ms latency).
-- Physics-Informed Edaphic Transport Loss (PIET-Loss) enforcing divergence-free water/nutrient flux continuity along root channels.
+- Physics-Informed Edaphic Transport Loss (PIET-Loss) enforcing divergence-free mass flux conservation along root channels.
 - Generative Root Skeleton Reconstruction (GRSR) for repairing occlusion-induced skeleton gaps.
 - Multi-modal edaphic fusion integrating PyG 2.0 GNN graph encodings with ISRIC SoilGrids 0–200 cm chemical depth profiles.
 - TNAU multi-crop agronomic prescriptions, CARRS drought resilience simulator, and RCS carbon credit financial flux calculator.
@@ -93,281 +93,254 @@ ISRIC SoilGrids 2.0 (Poggio et al., 2021) provides global predictions of soil pr
 
 ---
 
-## RHIZO-NET System Architecture
+## RHIZO-NET System Architecture & ONNX Model Suite
 
-RHIZO-NET is organised as a ten-stage sequential pipeline. Each stage transforms its input into a progressively enriched representation, culminating in actionable agronomic prescriptions, climate resilience scores, and carbon credit estimates. The master pipeline flowchart below illustrates the complete data flow from raw root image input to final output.
+RHIZO-NET is organised as a ten-stage sequential pipeline. Each stage transforms its input into a progressively enriched representation, culminating in actionable agronomic prescriptions, climate resilience scores, and carbon credit estimates.
 
-### Master Pipeline
+### Master End-to-End Pipeline Flowchart
 
 ```mermaid
 flowchart TD
-    subgraph Inputs ["Data Inputs"]
-        IMG["Root Images\n106,900 across 6 datasets"]
-        SOIL["ISRIC SoilGrids\n0-200 cm depth profiles"]
-        CLIMATE["IPCC Climate Scenarios\nRCP 4.5 and RCP 8.5"]
+    subgraph Inputs ["1. Multi-Modal Inputs"]
+        I1["Root Images: 106,900 images across 6 datasets"]
+        I2["SoilGrids 2.0: 0-200 cm depth profiles (pH, SOC, N, CEC, Clay)"]
+        I3["IPCC Climate Data: RCP 4.5 and RCP 8.5 scenarios"]
     end
 
-    subgraph Stage1 ["Stage 1: Data Ingestion"]
-        IMG --> LOAD["Multi-Dataset Loader\nResize 128x128, normalise, augment"]
+    subgraph Segmentation ["2. ONNX Neural Segmentation Suite"]
+        S1["RhizoUNet: 1.7M params, 4.2ms, 94.2% IoU"]
+        S2["DualStreamRootNet: 4.8M params, 9.6ms, 96.5% IoU"]
+        S3["RhizoHybridTransformer: 79.7K params, 1.8ms, 95.8% IoU"]
+        S4["RhizoAttentionNet: 5.8M params, 12.8ms, 97.9% IoU"]
+        I1 --> S1 & S2 & S3 & S4
     end
 
-    subgraph Stage2 ["Stage 2: Deep Learning Segmentation"]
-        LOAD --> TRAIN["20-Epoch Curriculum Training\n5 architectures in parallel"]
-        TRAIN --> PRED["Predicted Root Masks\nSoft probability maps"]
-    end
-
-    subgraph Stage3 ["Stage 3: Uncertainty Routing"]
-        PRED --> CHECK{"Confidence\ngreater than 0.50?"}
-        CHECK -->|Yes| MASK["High-Confidence Mask"]
-        CHECK -->|No| SAM["MobileSAM Adapter\nPoint-prompted fallback"]
+    subgraph Routing ["3. MobileSAM Uncertainty Routing"]
+        S1 & S2 & S3 & S4 --> CONF{"Entropy H > 0.45 or Confidence < 0.50?"}
+        CONF -->|"Yes"| SAM["MobileSAM Fallback Adapter (Point-Prompted Refinement)"]
+        CONF -->|"No"| MASK["High-Confidence Root Mask"]
         SAM --> MASK
     end
 
-    subgraph Stage4 ["Stage 4: Skeleton Reconstruction"]
+    subgraph Repair ["4. GRSR Gap Reconstruction"]
         MASK --> SKEL["Morphological Skeletonisation"]
-        SKEL --> GRSR["GRSR Gap Repair\nGeodesic path propagation"]
+        SKEL --> GRSR["Geodesic Path Propagation (Restores Occluded Gaps)"]
     end
 
-    subgraph Stage5 ["Stage 5: Morphometric Extraction"]
-        GRSR --> SKAN["skan Graph Analysis\nBranch order, tortuosity, length"]
-        SKAN --> SHOLL["Sholl Analysis\nIntersection vs radius profile"]
-        SKAN --> ANGLE["Seminal Root Angle\nOpening angle measurement"]
+    subgraph Morphometry ["5. Morphometric Extraction"]
+        GRSR --> SKAN["skan Graph Extraction (Branch Orders 1, 2, 3)"]
+        SKAN --> SHOLL["Sholl Analysis (Intersection vs Radius Curve)"]
+        SKAN --> ANGLE["Seminal Root Angle Map (Vector Opening Angle)"]
     end
 
-    subgraph Stage6 ["Stage 6: Graph Encoding"]
-        SKAN --> GF["RhizoGraphFormer\nLPE + multi-head attention"]
-        GF --> TOPO["128-d Topological Embedding"]
+    subgraph Encoding ["6. RhizoGraphFormer Encoding"]
+        SKAN --> LPE["Laplacian Positional Encoding (Normalised L = D - A)"]
+        LPE --> RGF["Multi-Head Graph Attention Layer"]
+        RGF --> VEC["128-d Topological Vector"]
     end
 
-    subgraph Stage7 ["Stage 7: Edaphic Fusion"]
-        TOPO --> FUSION["RhizoFusionNet\nPyG 2.0 Graph Attention Network"]
-        SOIL --> FUSION
-        FUSION --> DIAG["Nutrient Deficiency Classification\nHealthy / N / P / K / Micro"]
+    subgraph Fusion ["7. RhizoFusionNet Edaphic Fusion"]
+        VEC & I2 --> RFN["PyG 2.0 Graph Attention Network"]
+        RFN --> DIAG["5-Class Nutrient Deficiency Diagnosis (Healthy / N / P / K / Micro)"]
     end
 
-    subgraph Stage8 ["Stage 8: Agronomic Engine"]
-        DIAG --> TNAU["TNAU Prescription Generator\n5 crop-specific protocols"]
+    subgraph Deployment ["8-10. Actionable Deployment Engines"]
+        DIAG --> TNAU["Stage 8: TNAU Agronomic Engine (5 Crop Prescription Cards)"]
+        SHOLL & I3 --> CARRS["Stage 9: CARRS Climate Simulator (Drought Resilience Index)"]
+        SKAN --> RCS["Stage 10: RCS-Flux Carbon Predictor (1.76 t CO2e/ha/yr, $35.20/ha/yr)"]
     end
 
-    subgraph Stage9 ["Stage 9: Climate Simulation"]
-        SHOLL --> CARRS["CARRS Drought Simulator\nDrought Resilience Index"]
-        CLIMATE --> CARRS
-    end
-
-    subgraph Stage10 ["Stage 10: Carbon Economics"]
-        SKAN --> RCS["RCS-Flux Carbon Predictor\nSequestration rate and ROI"]
-    end
-
-    subgraph Outputs ["Final Outputs"]
-        TNAU --> OUT1["NPK Prescription Cards"]
-        CARRS --> OUT2["Climate Resilience Report"]
-        RCS --> OUT3["Carbon Credit Valuation\nUSD 35.20 per ha per year"]
-        TRAIN --> OUT4["ONNX Model Binaries\n4 exported architectures"]
+    subgraph Outputs ["Final Actionable Outputs"]
+        TNAU --> OUT1["NPK Split-Application & Foliar Spray Prescriptions"]
+        CARRS --> OUT2["RCP 4.5 vs 8.5 Climate Resilience Trajectories"]
+        RCS --> OUT3["Rhizosphere Carbon Credit & Economic ROI Financial Report"]
     end
 ```
 
-*Figure 1. RHIZO-NET master pipeline. Ten stages transform raw root images and soil chemistry inputs into segmentation masks, morphometric parameters, nutrient diagnoses, agronomic prescriptions, climate resilience scores, and carbon credit valuations. Arrows indicate data flow; dashed decision nodes represent uncertainty-based routing.*
+*Figure 1. RHIZO-NET master pipeline flowchart illustrating the full data transformation from raw visual, edaphic, and climate inputs through parallel ONNX model execution, MobileSAM uncertainty routing, GRSR gap repair, skan morphometrics, RhizoGraphFormer encoding, PyG edaphic fusion, and triple deployment engines.*
 
 ---
 
-### Neural Architecture Suite
+### Detailed ONNX Architecture Flowcharts
 
-We designed five complementary architectures, each targeting a distinct aspect of the root segmentation and analysis problem. The following subsections describe each architecture in detail with accompanying Mermaid flowcharts.
+#### 1. RhizoUNet ONNX Architecture Flowchart (`rhizo_unet.onnx`)
 
-#### RhizoUNet — Modified U-Net
-
-RhizoUNet modifies the canonical U-Net (Ronneberger et al., 2015) in three specific ways to better suit root imagery:
-
-**Modification 1: ELU activations.** Standard ReLU activations produce zero gradients for negative inputs, creating "dead neuron" zones. In root segmentation, where foreground pixels are sparse (roots typically occupy less than 15% of the image area), many neurons receive predominantly negative inputs during training. ELU activations maintain non-zero gradients for negative inputs, preventing training stagnation in sparse foreground scenarios.
-
-**Modification 2: Average pooling.** Max-pooling selects the maximum activation within each pooling window, which can discard the subtle intensity gradients that define thin root boundaries. Average pooling preserves boundary information by computing the mean activation, producing smoother feature maps that retain fine structural details.
-
-**Modification 3: Residual skip connections.** Within each encoder block, we add a 1×1 convolution residual path that bypasses the two 3×3 convolution layers. This enables gradient flow through identity shortcuts during backpropagation, stabilising training for the deeper encoder levels.
+RhizoUNet (`architecture/rhizo_unet.onnx`, 310 ONNX nodes, 6.69 MB) employs Exponential Linear Unit (ELU) activations to eliminate dead neurons in sparse root regions, average pooling to preserve thin lateral root boundaries, and intra-block residual skip connections.
 
 ```mermaid
 flowchart TD
-    subgraph ENC ["Encoder Path"]
-        I["Input: 128 x 128 x 3 RGB"] --> E1["Conv 3x3, ELU, 64 ch"]
-        E1 --> E1b["Conv 3x3, ELU, 64 ch + ResSkip"]
-        E1b --> P1["AvgPool 2x2: 64 x 64 x 64"]
-        P1 --> E2["Conv 3x3, ELU, 128 ch"]
-        E2 --> E2b["Conv 3x3, ELU, 128 ch + ResSkip"]
-        E2b --> P2["AvgPool 2x2: 32 x 32 x 128"]
-        P2 --> E3["Conv 3x3, ELU, 256 ch"]
-        E3 --> E3b["Conv 3x3, ELU, 256 ch + ResSkip"]
-        E3b --> P3["AvgPool 2x2: 16 x 16 x 256"]
-    end
-
-    subgraph BRIDGE ["Bottleneck Bridge"]
-        P3 --> BN["Conv 3x3, ELU, 512 ch, Dropout 0.2"]
-    end
-
-    subgraph DEC ["Decoder Path"]
-        BN --> U1["Bilinear Upsample 2x: 32 x 32 x 256"]
-        U1 --> S1["Concat with E3b: 32 x 32 x 512"]
-        S1 --> D1["Conv 3x3, ELU, 256 ch"]
-        D1 --> U2["Bilinear Upsample 2x: 64 x 64 x 128"]
-        U2 --> S2["Concat with E2b: 64 x 64 x 256"]
-        S2 --> D2["Conv 3x3, ELU, 128 ch"]
-        D2 --> U3["Bilinear Upsample 2x: 128 x 128 x 64"]
-        U3 --> S3["Concat with E1b: 128 x 128 x 128"]
-        S3 --> D3["Conv 3x3, ELU, 64 ch"]
-        D3 --> OUT["1x1 Conv: 1 ch sigmoid logits"]
-    end
+    IN["Input Tensor: input_image [N, 3, 128, 128]"] --> E1_1["Conv3d / Conv2d: 3x3, 64 filters + ELU"]
+    E1_1 --> E1_2["Conv3d / Conv2d: 3x3, 64 filters + ResSkip"]
+    E1_2 --> P1["AveragePool 2x2: [N, 64, 64, 64]"]
+    
+    P1 --> E2_1["Conv 3x3: 128 filters + ELU"]
+    E2_1 --> E2_2["Conv 3x3: 128 filters + ResSkip"]
+    E2_2 --> P2["AveragePool 2x2: [N, 128, 32, 32]"]
+    
+    P2 --> E3_1["Conv 3x3: 256 filters + ELU"]
+    E3_1 --> E3_2["Conv 3x3: 256 filters + ResSkip"]
+    E3_2 --> P3["AveragePool 2x2: [N, 256, 16, 16]"]
+    
+    P3 --> E4_1["Conv 3x3: 512 filters + ELU"]
+    E4_1 --> E4_2["Conv 3x3: 512 filters + ResSkip"]
+    E4_2 --> P4["AveragePool 2x2: [N, 512, 8, 8]"]
+    
+    P4 --> BOT["Bottleneck Conv 3x3: 1024 filters + ELU + Dropout 0.2"]
+    
+    BOT --> U4["ConvTranspose 2x2: [N, 512, 16, 16]"]
+    U4 & E4_2 --> CAT4["Concat Skip Connection: [N, 1024, 16, 16]"]
+    CAT4 --> D4["Conv 3x3: 512 filters + ELU"]
+    
+    D4 --> U3["ConvTranspose 2x2: [N, 256, 32, 32]"]
+    U3 & E3_2 --> CAT3["Concat Skip Connection: [N, 512, 32, 32]"]
+    CAT3 --> D3["Conv 3x3: 256 filters + ELU"]
+    
+    D3 --> U2["ConvTranspose 2x2: [N, 128, 64, 64]"]
+    U2 & E2_2 --> CAT2["Concat Skip Connection: [N, 256, 64, 64]"]
+    CAT2 --> D2["Conv 3x3: 128 filters + ELU"]
+    
+    D2 --> U1["ConvTranspose 2x2: [N, 64, 128, 128]"]
+    U1 & E1_2 --> CAT1["Concat Skip Connection: [N, 128, 128, 128]"]
+    CAT1 --> D1["Conv 3x3: 64 filters + ELU"]
+    
+    D1 --> HEAD["Conv 1x1: 1 filter + Sigmoid"]
+    HEAD --> OUT["Output Tensor: segmentation_mask [N, 1, 128, 128]"]
 ```
 
-*Figure 2. RhizoUNet architecture with three encoder levels, bottleneck bridge, and three decoder levels. Average pooling in the encoder preserves thin root boundary gradients. Residual skip connections within each encoder block stabilise gradient flow. Total parameters: 1,746,737.*
-
-The architecture achieves 94.2% IoU with a final loss of 0.0580 after 20-epoch curriculum training. While not our highest-performing model, RhizoUNet serves as the baseline architecture and provides robust segmentation performance with moderate computational cost (4.2 ms CPU inference latency).
+*Figure 2. RhizoUNet ONNX node graph flowchart. Input tensor `input_image` [N, 3, 128, 128] processes through 4 ELU average-pooling encoder levels and 4 transposed convolution decoder levels with skip concatenations, outputting `segmentation_mask` [N, 1, 128, 128].*
 
 ---
 
-#### RhizoAttentionNet — Oriented Topological Attention with Multi-Scale Receptive Fields
+#### 2. RhizoAttentionNet ONNX Architecture Flowchart (`rhizo_attention_net.onnx`)
 
-RhizoAttentionNet is our highest-accuracy model, achieving **97.9% IoU** at a loss of **0.0412**. It addresses a fundamental limitation of standard convolutional architectures: isotropic feature extraction. Standard 3×3 convolutions respond equally to all spatial orientations, treating horizontal root segments identically to diagonal soil cracks or vertical organic debris. However, root segments at different orientations carry distinct biological information—primary roots tend to grow vertically, secondary laterals emerge at characteristic angles, and tertiary fine roots exhibit near-random orientations.
-
-RhizoAttentionNet introduces two novel modules:
-
-**Multi-Scale Receptive Field Pyramid (MSRFP).** Three parallel convolution branches with kernel sizes 3×3, 5×5, and dilated 7×7 (dilation rate 2) capture root features at three spatial scales simultaneously. Fine laterals (approximately 2–5 pixels in diameter) are captured by the 3×3 branch, medium-diameter secondary roots (approximately 5–12 pixels) by the 5×5 branch, and thick primary axes (approximately 12–25 pixels) by the dilated 7×7 branch. The outputs are concatenated and reduced via 1×1 convolution.
-
-**Oriented Topological Attention Module (OTAM).** Four directional convolutional filters—oriented at 0° (horizontal), 45° (diagonal), 90° (vertical), and 135° (anti-diagonal)—generate orientation-specific feature maps. These maps are passed through a spatial softmax gating mechanism that learns to weight each orientation according to its relevance at each spatial location. The gated output selectively enhances root-like features while suppressing isotropic soil textures. Deep supervision heads at 1/4 and 1/2 resolution provide auxiliary gradients during training.
+RhizoAttentionNet (`architecture/rhizo_attention_net.onnx`, 807 ONNX nodes, 22.55 MB) introduces a Multi-Scale Receptive Field Pyramid (MSRFP) and Oriented Topological Attention Module (OTAM) with 4 directional filters (0°, 45°, 90°, 135°) to suppress isotropic soil background clutter, achieving 97.9% IoU.
 
 ```mermaid
 flowchart TD
-    IN["Input RGB: 128 x 128 x 3"] --> MSRFP_MODULE["MSRFP Module"]
-
+    IN["Input Tensor: input_image [N, 3, 128, 128]"] --> MSRFP_IN["MSRFP Input Partition"]
+    
     subgraph MSRFP ["Multi-Scale Receptive Field Pyramid"]
-        MSRFP_MODULE --> K3["Branch 1: Conv 3x3\nFine laterals, 2-5 px"]
-        MSRFP_MODULE --> K5["Branch 2: Conv 5x5\nSecondary roots, 5-12 px"]
-        MSRFP_MODULE --> K7["Branch 3: Dilated Conv 7x7\nPrimary axes, 12-25 px"]
-        K3 & K5 & K7 --> CAT["Concatenate + 1x1 Conv reduction"]
+        MSRFP_IN --> B1["Branch 1: Conv 3x3 (32 ch) - Fine Laterals 2-5px"]
+        MSRFP_IN --> B2["Branch 2: Conv 5x5 (32 ch) - Medium Roots 5-12px"]
+        MSRFP_IN --> B3["Branch 3: Dilated Conv 7x7 rate 2 (32 ch) - Primary Axes 12-25px"]
+        B1 & B2 & B3 --> CAT_MSRFP["Concat (96 ch) + Conv 1x1 Reduction (64 ch)"]
     end
-
-    CAT --> ENC["Deep Residual Encoder: 4 levels"]
-    ENC --> OTAM_IN["OTAM Input Features"]
-
+    
+    CAT_MSRFP --> ENC["4-Level Deep Residual Conv Encoder (64 -> 128 -> 256 -> 512 ch)"]
+    ENC --> OTAM_IN["OTAM Feature Maps"]
+    
     subgraph OTAM ["Oriented Topological Attention Module"]
-        OTAM_IN --> F0["Filter at 0 deg: Horizontal roots"]
-        OTAM_IN --> F45["Filter at 45 deg: Diagonal roots"]
-        OTAM_IN --> F90["Filter at 90 deg: Vertical roots"]
-        OTAM_IN --> F135["Filter at 135 deg: Anti-diagonal roots"]
-        F0 & F45 & F90 & F135 --> SOFTMAX["Spatial Softmax Gating\nLearned orientation weights"]
+        OTAM_IN --> D0["0 deg Filter: Horizontal Orientation"]
+        OTAM_IN --> D45["45 deg Filter: Diagonal Orientation"]
+        OTAM_IN --> D90["90 deg Filter: Vertical Orientation"]
+        OTAM_IN --> D135["135 deg Filter: Anti-Diagonal Orientation"]
+        D0 & D45 & D90 & D135 --> SOFTMAX["Spatial Softmax Weighting Map"]
+        SOFTMAX --> MODULATE["Channel-wise Gated Feature Modulation"]
     end
-
-    SOFTMAX --> GATED["Gated Feature Fusion"]
-    GATED --> DECODER["Deep Supervision Decoder"]
-    DECODER --> AUX1["Aux Head 1: 32 x 32 scale"]
-    DECODER --> AUX2["Aux Head 2: 64 x 64 scale"]
-    DECODER --> MAIN["Main Output: 128 x 128\n97.9% IoU, Loss 0.0412"]
+    
+    MODULATE --> DEC["Deep Supervision Decoder Path"]
+    DEC --> AUX1["Auxiliary Output Head 1 (32x32 Scale)"]
+    DEC --> AUX2["Auxiliary Output Head 2 (64x64 Scale)"]
+    DEC --> MAIN_HEAD["Main Output Head: Conv 1x1 + Sigmoid"]
+    MAIN_HEAD --> OUT["Output Tensor: segmentation_mask [N, 1, 128, 128] (97.9% IoU)"]
 ```
 
-*Figure 3. RhizoAttentionNet architecture. The MSRFP captures multi-scale root features, while OTAM applies orientation-specific attention to suppress isotropic soil background. Deep supervision heads provide auxiliary gradients at intermediate resolutions. Total parameters: 5,892,305.*
+*Figure 3. RhizoAttentionNet ONNX node graph flowchart showing MSRFP multi-scale feature extraction, OTAM oriented topological attention with 4 directional filters, deep supervision auxiliary heads, and main output tensor.*
 
 ---
 
-#### DualStreamRootNet — Hessian Vesselness Dual Encoder
+#### 3. DualStreamRootNet ONNX Architecture Flowchart (`dual_stream_root_net.onnx`)
 
-DualStreamRootNet exploits the fundamental geometric property that roots are tubular structures. Following Frangi et al. (1998), we compute the Hessian matrix of the input image at multiple spatial scales and analyse its eigenvalues to derive a vesselness response. For a two-dimensional image, the Hessian matrix at each pixel is:
-
-$$\mathbf{H} = \begin{bmatrix} I_{xx} & I_{xy} \\ I_{yx} & I_{yy} \end{bmatrix}$$
-
-where $I_{xx}$, $I_{xy}$, and $I_{yy}$ are second-order partial derivatives of the image intensity computed via Gaussian-smoothed convolutions. The eigenvalues $\lambda_1$ and $\lambda_2$ (where $|\lambda_1| \leq |\lambda_2|$) characterise local structure: tubular features produce $|\lambda_1| \approx 0$ and $|\lambda_2| \gg 0$, while blob-like features produce $|\lambda_1| \approx |\lambda_2|$. The vesselness response is maximal along root centrelines and decays radially.
-
-The vesselness map is computed at multiple scales (sigma values 1.0, 2.0, and 4.0 pixels) and fed through a dedicated three-level convolutional encoder. The original RGB image is simultaneously processed by a standard four-level spatial encoder. An adaptive fusion gate learns a per-pixel blending coefficient:
-
-$$\mathbf{F}_{\text{fused}} = \alpha \cdot \mathbf{F}_{\text{spatial}} + (1 - \alpha) \cdot \mathbf{F}_{\text{Hessian}}$$
-
-The joint decoder produces two outputs: a primary root segmentation mask and a centreline skeleton probability map.
+DualStreamRootNet (`architecture/dual_stream_root_net.onnx`, 883 ONNX nodes, 18.73 MB) combines a spatial RGB encoder stream with a parallel multi-scale Frangi Hessian vesselness encoder stream, fused via adaptive per-pixel sigmoid gating.
 
 ```mermaid
 flowchart TD
-    IMG["Input Image: 128 x 128 x 3"] --> SPATIAL["Stream 1: Spatial RGB Encoder\n4 levels: 64, 128, 256, 512 ch"]
-    IMG --> HESSIAN["Frangi Hessian Computation\nScales: sigma 1.0, 2.0, 4.0"]
-    HESSIAN --> EIGEN["Eigenvalue Analysis\nCompute lambda-1, lambda-2"]
-    EIGEN --> VESSEL["Vesselness Response Map\nMax across scales"]
-    VESSEL --> TUBE["Stream 2: Tubularity Encoder\n3 levels: 32, 64, 128 ch"]
-
-    SPATIAL --> GATE["Adaptive Fusion Gate\nLearned per-pixel alpha"]
-    TUBE --> GATE
-    GATE --> JOINT["Joint Feature Decoder\n3 upsample levels"]
-    JOINT --> MASK_OUT["Output 1: Root Segmentation Mask"]
-    JOINT --> SKEL_OUT["Output 2: Centreline Skeleton Map"]
+    IN["Input Tensor: input_image [N, 3, 128, 128]"] --> S1["Stream 1: Spatial RGB Encoder (4 Levels: 64, 128, 256, 512 ch)"]
+    
+    IN --> HESSIAN["Frangi Hessian Eigenvalue Matrix H = [Ixx Ixy; Iyx Iyy]"]
+    subgraph HessianStream ["Stream 2: Frangi Hessian Vesselness Engine"]
+        HESSIAN --> SCALES["Multi-Scale Derivative Filtering (sigma = 1.0, 2.0, 4.0 px)"]
+        SCALES --> EIGEN["Eigenvalue Analysis: lambda-1, lambda-2 (|lambda-1| ~ 0, |lambda-2| >> 0)"]
+        EIGEN --> VESSEL["Vesselness Response Map V(x)"]
+        VESSEL --> S2["Stream 2 Encoder: 3 Levels (32, 64, 128 ch)"]
+    end
+    
+    S1 & S2 --> GATE["Adaptive Per-Pixel Fusion Gate: F_fused = alpha * F_spatial + (1 - alpha) * F_Hessian"]
+    GATE --> JOINT["Joint Feature Decoder (4 Transposed Conv Levels)"]
+    
+    JOINT --> HEAD1["Head 1: Conv 1x1 + Sigmoid"]
+    JOINT --> HEAD2["Head 2: Conv 1x1 + Sigmoid"]
+    
+    HEAD1 --> OUT1["Output 1: segmentation_mask [N, 1, 128, 128] (96.5% IoU)"]
+    HEAD2 --> OUT2["Output 2: centreline_skeleton_map [N, 1, 128, 128]"]
 ```
 
-*Figure 4. DualStreamRootNet architecture. Stream 1 processes spatial RGB features; Stream 2 processes Hessian-derived vesselness maps. The adaptive fusion gate learns optimal blending at each pixel location. Total parameters: 4,885,959.*
-
-DualStreamRootNet achieves 96.5% IoU with a final loss of 0.0482. The Hessian stream provides the most benefit in heavily cluttered soil backgrounds where root-like textures (e.g., elongated organic debris) would otherwise cause false positives.
+*Figure 4. DualStreamRootNet ONNX node graph flowchart illustrating dual-stream spatial/Hessian encoding, adaptive fusion gating, and dual segmentation/skeleton output heads.*
 
 ---
 
-#### RhizoHybridTransformer — Swin Shifted-Window with Root Query Tokens
+#### 4. RhizoHybridTransformer ONNX Architecture Flowchart (`rhizo_hybrid_transformer.onnx`)
 
-Designed for edge deployment on mobile devices, agricultural drones, and embedded field sensors, RhizoHybridTransformer achieves competitive segmentation accuracy (95.8% IoU) with extreme parameter efficiency: only **79,749 parameters** and **1.17 MB** ONNX model size. This represents a 73.7× parameter reduction compared to RhizoAttentionNet.
-
-The architecture adapts the Swin Transformer (Liu et al., 2021) shifted-window mechanism for root segmentation. Input images are partitioned into non-overlapping 4×4 patches, producing a 32×32 token grid. Two successive Swin blocks apply window-based multi-head self-attention (W-MSA) within local 8×8 windows, followed by shifted-window multi-head self-attention (SW-MSA) with a 4-pixel shift to enable cross-window information exchange.
-
-The key innovation is **Root Query Tokens (RQT)**: a set of 16 learnable embedding vectors that are trained to attend specifically to root junction features. Rather than processing all 1,024 spatial tokens through expensive self-attention, RQT performs cross-attention between the small query set (16 tokens) and the spatial features (1,024 tokens), reducing computational complexity from $O(n^2)$ to $O(16n)$.
+RhizoHybridTransformer (`architecture/rhizo_hybrid_transformer.onnx`, 852 ONNX nodes, 1.17 MB) employs Swin shifted-window self-attention combined with 16 learned Root Query Tokens (RQT) for ultra-fast edge inference (1.8 ms CPU latency, 79,749 parameters).
 
 ```mermaid
 flowchart TD
-    IN["Input: 128 x 128 x 3"] --> PATCH["Patch Embedding\n4x4 patches: 32 x 32 tokens\nEmbedding dim: 48"]
-    PATCH --> SWIN1["Swin Block 1: W-MSA\nWindow size 8x8\nHeads: 3, dim per head: 16"]
-    SWIN1 --> SWIN2["Swin Block 2: SW-MSA\nShifted by 4 pixels\nCross-window information flow"]
-
-    subgraph RQT_BLOCK ["Root Query Token Module"]
-        SWIN2 --> CROSS["Cross-Attention\n16 learnable query tokens\nAttend to 1024 spatial tokens"]
+    IN["Input Tensor: input_image [N, 3, 128, 128]"] --> PATCH["Patch Partition & Embedding: Conv 4x4 stride 4 -> [N, 1024, 48]"]
+    
+    subgraph SwinBlocks ["Swin Transformer Encoder"]
+        PATCH --> W_MSA["Stage 1: Window Multi-Head Self-Attention (W-MSA 8x8)"]
+        W_MSA --> SW_MSA["Stage 2: Shifted-Window Self-Attention (SW-MSA 4px shift)"]
     end
-
-    CROSS --> DECODER["Lightweight Up-Projection\n2 bilinear upsample layers"]
-    DECODER --> HEAD["1x1 Conv Output Head\nLatency: 1.8 ms, Params: 79,749"]
+    
+    subgraph RQT ["Root Query Token Cross-Attention Engine"]
+        SW_MSA --> KEYS["Spatial Key-Value Tokens: K, V in R^(1024 x 48)"]
+        RQT_LEARNED["16 Learned Root Query Tokens: Q_root in R^(16 x 48)"] --> CROSS["Multi-Head Cross Attention: Softmax(Q_root * K^T / sqrt(d)) * V"]
+        KEYS --> CROSS
+        CROSS --> AGGREGATE["Junction Context Vector Aggregation"]
+    end
+    
+    AGGREGATE --> LIGHT_DEC["Lightweight Up-Projection Decoder (2 Bilinear Upsample + Conv 3x3)"]
+    LIGHT_DEC --> HEAD["Conv 1x1 + Sigmoid"]
+    HEAD --> OUT["Output Tensor: segmentation_mask [N, 1, 128, 128] (1.8ms CPU, 79.7K params, 1.17MB)"]
 ```
 
-*Figure 5. RhizoHybridTransformer architecture. Shifted-window attention enables efficient spatial feature extraction. Root Query Tokens aggregate junction-level context via cross-attention without processing all spatial tokens, enabling a lightweight decoder suitable for real-time inference on edge devices. ONNX size: 1.17 MB.*
+*Figure 5. RhizoHybridTransformer ONNX node graph flowchart showing Swin patch partitioning, W-MSA/SW-MSA window self-attention, Root Query Token cross-attention, and lightweight decoder.*
 
 ---
 
-#### RhizoGraphFormer — Graph Transformer with Laplacian Positional Encoding
+#### 5. RhizoGraphFormer ONNX Architecture Flowchart
 
-After pixel-level segmentation, the predicted mask is morphologically skeletonised and converted into a graph representation where nodes correspond to junction points (bifurcations), tip points (endpoints), and sampled intermediate points along root segments. Edges connect adjacent nodes along the skeleton. Each node is annotated with an 8-dimensional feature vector comprising its spatial coordinates (x, y), local curvature, branch order, segment diameter, Euclidean distance from the root crown, path length from the root crown, and node degree.
-
-RhizoGraphFormer processes this graph using multi-head attention with **Laplacian Positional Encodings (LPE)** (Dwivedi and Bresson, 2021). The normalised graph Laplacian $L = D - A$ (where $D$ is the degree matrix and $A$ is the adjacency matrix) is eigendecomposed, and the $k$ smallest non-trivial eigenvectors are used as positional encodings for each node. These encodings provide each node with a global topological coordinate that reflects its position within the root network's connectivity structure.
-
-Two graph transformer layers with residual connections, layer normalisation, and feed-forward networks process the encoded node features. Global mean and max pooling aggregate node-level representations into a single 128-dimensional graph-level embedding vector, which is used as the topological input to RhizoFusionNet for nutrient deficiency classification.
+RhizoGraphFormer operates on extracted skeleton graphs $G=(V,E)$, utilizing Laplacian Positional Encodings (LPE) to compute a 128-dimensional topological embedding vector.
 
 ```mermaid
 flowchart TD
-    subgraph NodeInput ["Node Feature Preparation"]
-        RAW["Node Features: x, y, curvature,\nbranch order, diameter, distance,\npath length, degree"] --> PROJ["Linear Projection: 8 to 64 dim"]
-    end
-
-    subgraph LPEBlock ["Laplacian Positional Encoding"]
-        LAP["Graph Laplacian: L = D - A"] --> EIGEN["Eigendecomposition\nSmallest k non-trivial eigenvectors"]
-        EIGEN --> LPE_VEC["LPE Vectors: N x k"]
-    end
-
-    PROJ --> COMBINE["Element-wise Addition:\nNode features + LPE"]
-    LPE_VEC --> COMBINE
-
-    subgraph GTLayers ["Graph Transformer Layers"]
-        COMBINE --> GT1["Layer 1: Multi-Head Node-Edge Attention\n4 heads, dim 64"]
-        GT1 --> NORM1["Residual + LayerNorm"]
-        NORM1 --> FFN1["Feed-Forward Network: 64 to 256 to 64"]
-        FFN1 --> GT2["Layer 2: Multi-Head Attention\n4 heads, dim 64"]
-        GT2 --> NORM2["Residual + LayerNorm"]
-        NORM2 --> FFN2["Feed-Forward Network: 64 to 256 to 64"]
-    end
-
-    FFN2 --> POOL["Global Pooling:\nMean Pool + Max Pool, concatenate"]
-    POOL --> EMB["128-dimensional Topological Embedding\nInput to RhizoFusionNet"]
+    IN_V["Node Feature Matrix V: [N_nodes, 8] (x, y, curvature, order, diameter, dist, path, degree)"] --> PROJ_V["Linear Feature Projection: [N_nodes, 64]"]
+    IN_E["Adjacency Matrix A & Degree Matrix D"] --> LAPLACIAN["Normalised Graph Laplacian L = D - A"]
+    
+    LAPLACIAN --> EIGEN["Eigendecomposition: L u_i = lambda_i u_i"]
+    EIGEN --> LPE["Top-k Eigenvector Selection: Positional Encoding [N_nodes, k]"]
+    LPE --> PROJ_LPE["Linear LPE Projection: [N_nodes, 64]"]
+    
+    PROJ_V & PROJ_LPE --> ADD_ENC["Node Feature + LPE Element-wise Addition: h_i^(0)"]
+    
+    ADD_ENC --> GT1["Graph Transformer Layer 1: Node-Edge Multi-Head Attention (4 Heads, dim 64)"]
+    GT1 --> NORM1["Residual Shortcut + LayerNorm + Feed-Forward Network"]
+    NORM1 --> GT2["Graph Transformer Layer 2: Node-Edge Multi-Head Attention (4 Heads, dim 64)"]
+    GT2 --> NORM2["Residual Shortcut + LayerNorm + Feed-Forward Network"]
+    
+    NORM2 --> MEAN_POOL["Global Mean Pooling"]
+    NORM2 --> MAX_POOL["Global Max Pooling"]
+    MEAN_POOL & MAX_POOL --> CAT_POOL["Concatenate [N_nodes -> 128-d]"]
+    CAT_POOL --> OUT_EMB["Topological Embedding Vector: [1, 128] (Input to RhizoFusionNet)"]
 ```
 
-*Figure 6. RhizoGraphFormer architecture. Laplacian eigenvector encodings provide global topological coordinates, enabling the transformer to reason about branching hierarchy, network connectivity, and root system symmetry. The 128-d output embedding serves as the topological input to multi-modal fusion. Total parameters: 64,128.*
+*Figure 6. RhizoGraphFormer architecture flowchart illustrating graph Laplacian eigendecomposition, LPE positional embedding, dual-layer graph transformer attention, and global pooling.*
 
 ---
 
 ### Loss Function Suite
 
-We train with a composite loss combining five complementary terms, each addressing a different aspect of segmentation quality:
+We train with a composite loss combining five complementary terms:
 
 $$\mathcal{L}_{\text{total}} = w_1 \mathcal{L}_{\text{BCE}} + w_2 \mathcal{L}_{\text{Dice}} + w_3 \mathcal{L}_{\text{clDice}} + w_4 \mathcal{L}_{\text{Focal}} + w_5 \mathcal{L}_{\text{PIET}}$$
 
@@ -387,9 +360,9 @@ where $\gamma = 0.01$ balances the PIET term against other loss components. The 
 
 ### MobileSAM Uncertainty Routing
 
-For image patches where the primary segmentation model's maximum confidence score falls below 0.50, we route the patch through a MobileSAM (Zhang et al., 2023) adapter. MobileSAM generates point-prompted masks using uncertainty-weighted sampling: points are sampled at locations of maximum prediction entropy, and the SAM encoder-decoder generates refined masks at these locations. This fallback mechanism ensures robust coverage across all soil textures and imaging conditions without requiring retraining of the primary models.
+For image patches where the primary segmentation model's maximum confidence score falls below 0.50, we route the patch through a MobileSAM (Zhang et al., 2023) adapter. MobileSAM generates point-prompted masks using uncertainty-weighted sampling: points are sampled at locations of maximum prediction entropy, and the SAM encoder-decoder generates refined masks at these locations.
 
-![Figure 7: MobileSAM uncertainty heatmap displaying the spatial distribution of model confidence across image patches. Regions shown in red indicate low-confidence areas where the primary model's prediction entropy exceeds the routing threshold. These patches are automatically forwarded to the MobileSAM fallback adapter for point-prompted refinement. The blue regions represent high-confidence predictions that proceed directly through the standard pipeline. This uncertainty-based routing ensures that no image region is left with unreliable segmentation, particularly in areas with severe soil occlusion or unusual background textures.](elsevier/figures/04_mobilesam_uncertainty_heatmap.png)
+![Figure 7: MobileSAM uncertainty heatmap displaying the spatial distribution of model confidence across image patches. Regions shown in red indicate low-confidence areas where the primary model's prediction entropy exceeds the routing threshold. These patches are automatically forwarded to the MobileSAM fallback adapter for point-prompted refinement. The blue regions represent high-confidence predictions that proceed directly through the standard pipeline.](elsevier/figures/04_mobilesam_uncertainty_heatmap.png)
 
 *Figure 7. MobileSAM uncertainty heatmap. Red regions indicate low-confidence patches routed to the SAM fallback adapter.*
 
@@ -399,9 +372,7 @@ For image patches where the primary segmentation model's maximum confidence scor
 
 Soil aggregates frequently occlude root segments, creating artificial gaps in the skeletonised graph. These gaps sever continuous root axes into disconnected fragments, corrupting downstream morphometric analyses. GRSR addresses this by identifying pairs of disconnected skeleton endpoints that lie within a configurable geodesic distance threshold (default: 30 pixels). For each candidate pair, GRSR computes a shortest-path reconstruction through the distance-transformed mask, generating a plausible connecting path that bridges the occlusion gap.
 
-The reconstruction operates in three steps: (1) detect all skeleton endpoints and classify them as "open" (potential gap sites) versus "closed" (genuine root tips based on local diameter tapering); (2) for each pair of open endpoints within the geodesic threshold, compute the optimal connecting path using Dijkstra's algorithm on the distance transform; (3) merge the reconstructed paths into the skeleton graph, updating node and edge lists accordingly.
-
-![Figure 8: GRSR gap reconstruction demonstration. The left panel shows the original skeleton extracted from the segmentation mask, with three visible gaps caused by soil particle occlusion. The centre panel highlights the detected open endpoints in red, marking the sites where continuous root axes were artificially severed. The right panel shows the fully reconstructed skeleton after GRSR has bridged all three gaps using geodesic path propagation through the distance-transformed mask. The reconstructed connections follow the natural curvature of the surrounding root segments, producing topologically coherent skeleton graphs suitable for accurate morphometric analysis.](elsevier/figures/05_grsr_gap_reconstruction.png)
+![Figure 8: GRSR gap reconstruction demonstration. The left panel shows the original skeleton extracted from the segmentation mask, with three visible gaps caused by soil particle occlusion. The centre panel highlights the detected open endpoints in red, marking the sites where continuous root axes were artificially severed. The right panel shows the fully reconstructed skeleton after GRSR has bridged all three gaps using geodesic path propagation through the distance-transformed mask.](elsevier/figures/05_grsr_gap_reconstruction.png)
 
 *Figure 8. GRSR gap reconstruction. Left: original skeleton with occlusion gaps. Centre: detected open endpoints. Right: fully reconstructed skeleton.*
 
@@ -411,21 +382,21 @@ The reconstruction operates in three steps: (1) detect all skeleton endpoints an
 
 The reconstructed skeleton is analysed using *skan* (Nunez-Iglesias et al., 2018) to extract comprehensive morphometric parameters.
 
-**Branch order hierarchy.** Each root segment is classified into primary (1st order), secondary (2nd order), or tertiary (3rd order) based on its topological distance from the root crown node. Primary roots originate directly from the crown, secondary laterals branch from primaries, and tertiary fine roots branch from secondaries. This classification is essential for understanding root system topology and for computing order-specific metrics such as average lateral length and branching density.
+**Branch order hierarchy.** Each root segment is classified into primary (1st order), secondary (2nd order), or tertiary (3rd order) based on its topological distance from the root crown node.
 
-![Figure 9: skan skeleton with colour-coded branch order hierarchy. Primary roots are displayed in blue, secondary lateral branches in green, and tertiary fine roots in orange. The branch order classification enables order-specific morphometric analysis and provides the structural basis for computing parameters such as primary root length, lateral branching density, and fine root proportion.](elsevier/figures/06_skan_skeleton_and_branch_hierarchy.png)
+![Figure 9: skan skeleton with colour-coded branch order hierarchy. Primary roots are displayed in blue, secondary lateral branches in green, and tertiary fine roots in orange. The branch order classification enables order-specific morphometric analysis.](elsevier/figures/06_skan_skeleton_and_branch_hierarchy.png)
 
 *Figure 9. skan-extracted skeleton with branch order colour coding. Blue: primary; Green: secondary; Orange: tertiary.*
 
-**Sholl analysis.** Concentric circles at fixed radius intervals (10-pixel increments) are centred on the root crown node, and the number of skeleton-circle intersections is counted at each radius. The resulting intersection-versus-radius profile characterises branching complexity as a function of distance from the crown. A peak in the Sholl profile indicates the depth zone of maximum branching density.
+**Sholl analysis.** Concentric circles at fixed radius intervals (10-pixel increments) are centred on the root crown node, and the number of skeleton-circle intersections is counted at each radius.
 
-![Figure 10: Sholl analysis intersection count plotted as a function of radial distance from the root crown. The profile shows a characteristic rise in branching density from the crown outward, reaching a peak near 40 pixels (corresponding to the zone of maximum lateral root emergence), followed by a gradual decline as roots thin and terminate. The area under the Sholl curve provides an integrated measure of total branching complexity, while the peak position indicates the dominant branching depth zone.](elsevier/figures/07_sholl_analysis_radius_curve.png)
+![Figure 10: Sholl analysis intersection count plotted as a function of radial distance from the root crown. The profile shows a characteristic rise in branching density from the crown outward, reaching a peak near 40 pixels, followed by a gradual decline.](elsevier/figures/07_sholl_analysis_radius_curve.png)
 
 *Figure 10. Sholl analysis profile showing intersection count versus radial distance from root crown.*
 
-**Seminal root angle.** The opening angle between the two outermost primary seminal roots is measured at a fixed depth (25 pixels below the crown). Wider seminal root angles are associated with broader soil volume exploration and improved drought tolerance in cereal crops.
+**Seminal root angle.** The opening angle between the two outermost primary seminal roots is measured at a fixed depth (25 pixels below the crown).
 
-![Figure 11: Seminal root angle vector diagram. The two outermost primary seminal roots are identified, and their directional vectors are computed at a fixed depth below the root crown. The opening angle between these vectors is measured and annotated. In this example, the seminal root angle of 62 degrees indicates a moderately narrow root system architecture, consistent with a genotype adapted to well-watered conditions. Wider angles (greater than 80 degrees) would indicate a broader exploration pattern typical of drought-adapted genotypes.](elsevier/figures/08_seminal_root_angle_vector_map.png)
+![Figure 11: Seminal root angle vector diagram. The two outermost primary seminal roots are identified, and their directional vectors are computed at a fixed depth below the root crown. The opening angle between these vectors is measured and annotated (62 degrees).](elsevier/figures/08_seminal_root_angle_vector_map.png)
 
 *Figure 11. Seminal root angle vector diagram showing the opening angle between primary seminal roots.*
 
@@ -435,17 +406,17 @@ The reconstructed skeleton is analysed using *skan* (Nunez-Iglesias et al., 2018
 
 ISRIC SoilGrids 2.0 (Poggio et al., 2021) provides depth-resolved predictions of soil chemical properties at six standard depth intervals: 0–5, 5–15, 15–30, 30–60, 60–100, and 100–200 cm. For each location, we extract a 30-dimensional feature vector (five properties × six depths): pH in water, soil organic carbon (g/kg), total nitrogen (g/kg), cation exchange capacity (cmol(+)/kg), and clay mass fraction (%).
 
-![Figure 12: ISRIC SoilGrids 0–200 cm chemical depth profiles. Five soil properties are plotted as a function of depth across the six standard ISRIC intervals. pH shows a characteristic slight increase with depth, organic carbon and nitrogen decline exponentially from the topsoil, cation exchange capacity follows organic matter distribution, and clay fraction may increase or decrease depending on soil type. These depth-resolved profiles provide the edaphic context essential for interpreting root morphometric data and generating site-specific agronomic recommendations.](elsevier/figures/09_soilgrids_depth_profile_curves.png)
+![Figure 12: ISRIC SoilGrids 0–200 cm chemical depth profiles. Five soil properties are plotted as a function of depth across the six standard ISRIC intervals.](elsevier/figures/09_soilgrids_depth_profile_curves.png)
 
 *Figure 12. SoilGrids 0–200 cm depth profiles for five chemical properties.*
 
 The 30-dimensional SoilGrids vector is concatenated with the 128-dimensional RhizoGraphFormer topological embedding and processed by **RhizoFusionNet**, a PyG 2.0 (Fey and Lenssen, 2019) graph attention network. RhizoFusionNet outputs a five-class nutrient deficiency probability distribution: Healthy, Nitrogen-deficient, Phosphorus-deficient, Potassium-deficient, or Micronutrient-stressed.
 
-![Figure 13: RhizoGraphFormer attention weight heatmap showing the learned importance of each node in the root skeleton graph. Warmer colours (red, yellow) indicate nodes receiving higher attention weights during the multi-head attention computation. Junction nodes—where branching occurs—consistently receive the highest attention, confirming that the model has learned to focus on topologically significant structural features rather than uniformly distributing attention across all skeleton points.](elsevier/figures/10_graph_transformer_attention_heatmap.png)
+![Figure 13: RhizoGraphFormer attention weight heatmap showing the learned importance of each node in the root skeleton graph. Warmer colours indicate nodes receiving higher attention weights during multi-head attention. Junction nodes consistently receive the highest attention.](elsevier/figures/10_graph_transformer_attention_heatmap.png)
 
 *Figure 13. RhizoGraphFormer attention heatmap. Junction nodes receive highest attention weights.*
 
-![Figure 14: Multi-modal nutrient deficiency classification probability spectrum produced by RhizoFusionNet. The five-class probability distribution is shown for a representative test sample. In this example, the model assigns highest probability to Nitrogen-deficient (0.47), followed by Healthy (0.28), Micronutrient-stressed (0.14), Phosphorus-deficient (0.08), and Potassium-deficient (0.03). The dominant deficiency class drives the subsequent TNAU agronomic prescription generation.](elsevier/figures/11_multimodal_class_probability_spectrum.png)
+![Figure 14: Multi-modal nutrient deficiency classification probability spectrum produced by RhizoFusionNet. The dominant deficiency class drives subsequent TNAU agronomic prescription generation.](elsevier/figures/11_multimodal_class_probability_spectrum.png)
 
 *Figure 14. RhizoFusionNet nutrient deficiency class probability spectrum.*
 
@@ -453,7 +424,7 @@ The 30-dimensional SoilGrids vector is concatenated with the 128-dimensional Rhi
 
 ### PIET-Loss Validation
 
-![Figure 15: PIET-Loss mass flux gradient field map. Arrows indicate the direction and magnitude of the predicted soft mask's spatial gradients along root channels. A divergence-free field (uniform arrow lengths with smooth directional transitions) confirms that PIET-Loss successfully enforces mass flux conservation. The absence of abrupt gradient reversals along root axes indicates topologically smooth predictions consistent with continuous water transport pathways. Background regions show near-zero gradients, confirming that PIET-Loss selectively operates on root channel predictions.](elsevier/figures/12_piet_loss_mass_conservation_map.png)
+![Figure 15: PIET-Loss mass flux gradient field map. Arrows indicate the direction and magnitude of spatial gradients along root channels. A divergence-free field confirms that PIET-Loss successfully enforces mass flux conservation.](elsevier/figures/12_piet_loss_mass_conservation_map.png)
 
 *Figure 15. PIET-Loss gradient field confirming divergence-free mass flux along root channels.*
 
@@ -461,35 +432,25 @@ The 30-dimensional SoilGrids vector is concatenated with the 128-dimensional Rhi
 
 ### TNAU Agronomic Recommendation Engine
 
-The nutrient deficiency classification from RhizoFusionNet drives a rule-based agronomic engine encoding fertiliser protocols from Tamil Nadu Agricultural University (TNAU) for five crop archetypes. Each protocol specifies crop-specific basal and split-application NPK schedules, micronutrient supplementation, organic amendments, and specialised interventions.
+The nutrient deficiency classification from RhizoFusionNet drives a rule-based agronomic engine encoding fertiliser protocols from Tamil Nadu Agricultural University (TNAU) for five crop archetypes.
 
-**Crop 1: Sorghum — Split-N Protocol.** Nitrogen is applied in three splits (basal, knee-high, and flowering stages) to match crop demand curves and minimise leaching losses. Phosphorus and potassium are applied entirely at basal.
-
-![Figure 16: Sorghum split-N prescription card generated by the TNAU agronomic engine. The card specifies nitrogen application rates at three growth stages: 40 kg/ha at basal, 40 kg/ha at knee-high stage (30 DAS), and 20 kg/ha at flowering (60 DAS). Phosphorus (40 kg/ha) and potassium (20 kg/ha) are applied entirely at basal. The card also recommends zinc sulphate at 25 kg/ha as a micronutrient supplement for sorghum grown in alkaline soils.](elsevier/figures/13_crop1_sorghum_npk_prescription_card.png)
+![Figure 16: Sorghum split-N prescription card generated by the TNAU agronomic engine.](elsevier/figures/13_crop1_sorghum_npk_prescription_card.png)
 
 *Figure 16. Sorghum NPK split-application prescription card.*
 
-**Crop 2: Tomato — Drip Fertigation Protocol.** Nutrients are delivered through the drip irrigation system in weekly doses calibrated to growth-stage demand, maximising uptake efficiency and minimising ground water contamination.
-
-![Figure 17: Tomato drip fertigation flow card. The card displays weekly nutrient delivery schedules across four growth stages: establishment (weeks 1-3), vegetative growth (weeks 4-8), flowering and fruit set (weeks 9-14), and harvest (weeks 15-20). Water-soluble NPK formulations are specified for each stage, with calcium nitrate supplementation during fruiting to prevent blossom-end rot.](elsevier/figures/14_crop2_tomato_drip_fertigation_card.png)
+![Figure 17: Tomato drip fertigation flow card with growth-stage-specific nutrient delivery schedules.](elsevier/figures/14_crop2_tomato_drip_fertigation_card.png)
 
 *Figure 17. Tomato drip fertigation flow card with growth-stage scheduling.*
 
-**Crop 3: Turmeric — Basal Organic FYM Protocol.** Heavy organic amendments (Farm Yard Manure) are applied at planting to build soil organic carbon and support the extended 8–9 month crop cycle.
-
-![Figure 18: Turmeric basal organic FYM prescription card. The card recommends 25 tonnes/ha of well-decomposed FYM applied at planting, supplemented with 60:30:120 kg/ha NPK. The high potassium requirement reflects turmeric's substantial rhizome biomass production. Boron (1 kg/ha) is recommended as a micronutrient for rhizome development.](elsevier/figures/15_crop3_turmeric_organic_fym_card.png)
+![Figure 18: Turmeric basal organic FYM prescription card.](elsevier/figures/15_crop3_turmeric_organic_fym_card.png)
 
 *Figure 18. Turmeric FYM-based organic prescription card.*
 
-**Crop 4: Groundnut — Calcareous Soil Gypsum Amendment.** In calcareous soils (pH greater than 7.5), calcium carbonate interferes with phosphorus and micronutrient availability. Gypsum (calcium sulphate) application reduces effective pH and supplies calcium directly to the pegging zone.
-
-![Figure 19: Groundnut calcareous gypsum suppression protocol card. For calcareous soils, the card prescribes 500 kg/ha gypsum applied at the pegging stage (45 DAS) to supply calcium directly to developing pods. The NPK schedule of 25:50:75 kg/ha reflects groundnut's moderate nitrogen fixation capacity (reducing N requirement) and high potassium demand for oil synthesis.](elsevier/figures/16_crop4_groundnut_calcareous_suppression_card.png)
+![Figure 19: Groundnut calcareous gypsum amendment card.](elsevier/figures/16_crop4_groundnut_calcareous_suppression_card.png)
 
 *Figure 19. Groundnut calcareous soil gypsum amendment card.*
 
-**Crop 5: African Marigold — Zn–Fe Foliar Lockout Remediation.** In high-pH soils, zinc and iron become insoluble and unavailable to plant roots despite adequate total soil concentrations. Foliar spray application bypasses root uptake entirely.
-
-![Figure 20: Marigold foliar Zn–Fe lockout remediation card. The card prescribes three foliar sprays of ZnSO4 at 0.5 percent and FeSO4 at 0.5 percent at 30, 45, and 60 DAS to remediate micronutrient lockout in high-pH soils. The NPK basal application of 120:60:60 kg/ha reflects marigold's high nitrogen demand for vegetative biomass and flower production.](elsevier/figures/17_crop5_marigold_floral_lockout_card.png)
+![Figure 20: Marigold foliar Zn–Fe lockout remediation card.](elsevier/figures/17_crop5_marigold_floral_lockout_card.png)
 
 *Figure 20. Marigold Zn–Fe lockout remediation card with foliar spray schedules.*
 
@@ -497,9 +458,9 @@ The nutrient deficiency classification from RhizoFusionNet drives a rule-based a
 
 ### CARRS Climate Drought Simulator
 
-The Climate-Adaptive Root Resilience Scorer (CARRS) integrates root morphometric parameters (maximum root depth, branching density, root hair density, seminal root angle) with projected climate scenarios to compute a composite Drought Resilience Index (DRI). The simulator models soil water depletion under IPCC RCP 4.5 (moderate warming, +2.0°C by 2100) and RCP 8.5 (severe warming, +4.5°C by 2100) scenarios, accounting for increased evapotranspiration demand and altered precipitation patterns.
+The Climate-Adaptive Root Resilience Scorer (CARRS) integrates root morphometric parameters with projected climate scenarios to compute a composite Drought Resilience Index (DRI).
 
-![Figure 21: CARRS climate drought resilience simulation. DRI trajectories under RCP 4.5 (green curve) and RCP 8.5 (red curve) warming scenarios are plotted over a simulated 120-day growing season. Under moderate warming (RCP 4.5), the root system maintains DRI above the critical threshold of 0.40 throughout the season. Under severe warming (RCP 8.5), DRI drops below 0.40 at approximately day 85, indicating the onset of critical drought stress. The shaded area between curves quantifies the climate vulnerability window requiring adaptive management intervention.](elsevier/figures/21_carrs_climate_drought_simulation.png)
+![Figure 21: CARRS climate drought resilience simulation. DRI trajectories under RCP 4.5 and RCP 8.5 warming scenarios over a 120-day growing season.](elsevier/figures/21_carrs_climate_drought_simulation.png)
 
 *Figure 21. CARRS drought resilience trajectories under RCP 4.5 and RCP 8.5 scenarios.*
 
@@ -507,13 +468,13 @@ The Climate-Adaptive Root Resilience Scorer (CARRS) integrates root morphometric
 
 ### RCS-Flux Carbon Sequestration Predictor
 
-The Rhizosphere Carbon Sequestration (RCS-Flux) module estimates belowground carbon fixation based on root biomass density (estimated from segmentation mask area and calibrated diameter measurements), root turnover rate (estimated from species-specific literature values), and soil organic carbon incorporation efficiency. The model predicts an annual carbon sequestration rate of **1.76 tonnes CO2-equivalent per hectare per year**, corresponding to a carbon credit market value of approximately **USD 35.20/ha/year** at current voluntary carbon market prices (USD 20/tonne CO2e).
+The Rhizosphere Carbon Sequestration (RCS-Flux) module estimates belowground carbon fixation based on root biomass density, turnover rate, and soil organic carbon incorporation efficiency.
 
-![Figure 22: RCS rhizosphere carbon sequestration depth map. The heatmap shows estimated carbon fixation rates (g C per cubic metre per year) across soil depth intervals. The highest sequestration rates occur in the 0–30 cm zone where root density is greatest and organic carbon turnover is most active. Deeper zones (60–200 cm) show lower but more persistent carbon storage due to reduced microbial decomposition rates.](elsevier/figures/22_rcs_carbon_sequestration_depth_map.png)
+![Figure 22: RCS rhizosphere carbon sequestration depth map showing estimated carbon fixation rates across depth intervals.](elsevier/figures/22_rcs_carbon_sequestration_depth_map.png)
 
 *Figure 22. RCS carbon sequestration depth map showing estimated fixation rates.*
 
-![Figure 23: Economic ROI and farmer savings card. The card summarises per-hectare financial benefits of RHIZO-NET-guided management: fertiliser savings through precision application (USD 45/ha/year), yield improvement through optimised root health (USD 120/ha/year), and carbon credit revenue (USD 35.20/ha/year). Total projected benefit: USD 200.20/ha/year, with an implementation cost of USD 25/ha/year for imaging and analysis, yielding an 8:1 benefit-to-cost ratio.](elsevier/figures/23_economic_roi_farmer_savings_card.png)
+![Figure 23: Economic ROI and farmer savings card summarising per-hectare financial benefits of RHIZO-NET-guided management.](elsevier/figures/23_economic_roi_farmer_savings_card.png)
 
 *Figure 23. Economic ROI card showing projected farmer savings and carbon credit revenue.*
 
@@ -537,7 +498,7 @@ We compiled six publicly available root imagery datasets spanning diverse specie
 
 *Table 1. Dataset composition. PRMI dominates in volume (67.7%), providing robust minirhizotron training data. All datasets use standard train/validation/test splits (70/15/15).*
 
-![Figure 24: Dataset modality and image volume matrix. The visualisation shows the distribution of images across datasets and imaging modalities, highlighting the dominance of the PRMI minirhizotron collection and the diversity of soil backgrounds across the six datasets.](elsevier/figures/01_dataset_modality_matrix.png)
+![Figure 24: Dataset modality and image volume matrix. The visualisation shows the distribution of images across datasets and imaging modalities.](elsevier/figures/01_dataset_modality_matrix.png)
 
 *Figure 24. Dataset modality matrix showing image counts and modality types.*
 
@@ -554,21 +515,19 @@ All vision models were trained using a **20-epoch deep curriculum schedule** wit
 
 *Table 2. Curriculum training schedule. Loss terms are progressively activated to provide stable, incremental learning.*
 
-Optimiser: AdamW with weight decay 1e-4. Batch size: 16. Input resolution: 128×128 pixels. Data augmentation: random horizontal and vertical flips, rotation (±15°), colour jitter (brightness ±0.1, contrast ±0.1), and Gaussian noise (sigma 0.01).
-
 ---
 
 ## Results and Discussion
 
 ### Training Convergence
 
-![Figure 25: 20-epoch deep curriculum loss reduction curve. The plot tracks the total composite loss (solid line) and individual loss components (dashed lines) across all 20 training epochs. Vertical dashed lines mark the curriculum boundaries where additional loss terms are activated. The characteristic step-down pattern at each boundary reflects the model's rapid adaptation to newly introduced constraints. The final composite loss converges to 0.0412, representing a 95.2% reduction from the initial epoch-1 loss of 0.8520. The clDice component shows the most dramatic improvement between epochs 6 and 10, confirming its critical role in establishing centreline connectivity.](elsevier/figures/02_deep_curriculum_20epoch_loss_curve.png)
+![Figure 25: 20-epoch deep curriculum loss reduction curve.](elsevier/figures/02_deep_curriculum_20epoch_loss_curve.png)
 
 *Figure 25. Loss convergence over 20 epochs with progressive loss term activation.*
 
 ### Architecture Comparison
 
-![Figure 26: Architecture benchmark comparison. Four radar-style performance profiles compare parameter count, ONNX file size, CPU inference latency, final training loss, and IoU accuracy across all four vision architectures. RhizoAttentionNet dominates in accuracy metrics (highest IoU, lowest loss) but requires the most parameters and storage. RhizoHybridTransformer achieves the best efficiency profile (smallest model, fastest inference) while maintaining competitive accuracy. DualStreamRootNet offers a balanced middle ground, and RhizoUNet provides baseline reference performance.](elsevier/figures/03_architecture_benchmark_comparison.png)
+![Figure 26: Architecture benchmark comparison.](elsevier/figures/03_architecture_benchmark_comparison.png)
 
 *Figure 26. Comparative benchmarks across four vision architectures.*
 
@@ -583,29 +542,29 @@ Optimiser: AdamW with weight decay 1e-4. Batch size: 16. Input resolution: 128×
 
 ### ONNX Deployment Profiling
 
-![Figure 27: ONNX model file size versus CPU inference latency scatter plot. Each point represents one of the four exported architectures. The plot reveals a clear linear relationship between model complexity and inference time. RhizoHybridTransformer occupies the desirable lower-left corner (smallest, fastest), while RhizoAttentionNet occupies the upper-right (largest, slowest but most accurate). The horizontal dashed line at 10 ms marks the real-time inference threshold for typical agricultural drone frame rates (100 FPS).](elsevier/figures/18_onnx_architecture_latency_profile.png)
+![Figure 27: ONNX model file size versus CPU inference latency scatter plot.](elsevier/figures/18_onnx_architecture_latency_profile.png)
 
 *Figure 27. ONNX deployment profile showing model size vs inference latency.*
 
 ### End-to-End Segmentation
 
-![Figure 28: End-to-end root segmentation triptych. Left panel: raw input image showing a complex root system against a cluttered soil background with visible organic debris and mineral inclusions. Centre panel: predicted segmentation mask produced by RhizoAttentionNet, showing clean delineation of primary and lateral root structures with preserved connectivity. Right panel: overlay of the predicted mask (green) on the input image, demonstrating precise boundary alignment and the absence of false positives in the soil background.](elsevier/figures/19_end_to_end_root_segmentation_triptych.png)
+![Figure 28: End-to-end root segmentation triptych.](elsevier/figures/19_end_to_end_root_segmentation_triptych.png)
 
 *Figure 28. End-to-end segmentation: input, predicted mask, and overlay.*
 
 ### Loss Analysis
 
-![Figure 29: Hyper-precise loss reduction spectrum. The waterfall chart decomposes the total loss reduction from 0.8520 to 0.0412 into contributions from each loss component and training phase. BCE+Dice (epochs 1-5) contribute the largest absolute reduction (0.8520 to 0.2339). clDice (epochs 6-10) provides the next major step (0.2339 to 0.1027). Focal Loss (epochs 11-15) improves boundary precision (0.1027 to 0.0784). PIET-Loss (epochs 16-20) delivers the final refinement (0.0784 to 0.0412), confirming its role in achieving physics-consistent predictions.](elsevier/figures/24_hyper_precise_loss_reduction_spectrum.png)
+![Figure 29: Hyper-precise loss reduction spectrum.](elsevier/figures/24_hyper_precise_loss_reduction_spectrum.png)
 
 *Figure 29. Loss component decomposition showing each term's contribution.*
 
 ### System Overview
 
-![Figure 30: RHIZO-NET master pipeline infographic showing all ten stages from data ingestion through agronomic output. The infographic uses a consistent colour coding: blue for data processing stages, green for segmentation and analysis stages, orange for fusion and classification stages, and red for output and deployment stages.](elsevier/figures/20_rhizo_net_master_pipeline_infographic.png)
+![Figure 30: RHIZO-NET master pipeline infographic.](elsevier/figures/20_rhizo_net_master_pipeline_infographic.png)
 
 *Figure 30. RHIZO-NET master pipeline infographic.*
 
-![Figure 31: RHIZO-NET ultimate agro-technology dashboard consolidating all system outputs into a single visual summary. The dashboard integrates segmentation accuracy metrics (IoU, Dice, clDice), morphometric parameters (total root length, branching density, Sholl complexity index, seminal angle), nutrient status classification, agronomic prescription summaries, climate resilience scores (DRI under RCP 4.5 and 8.5), and carbon credit valuations. This consolidated view demonstrates the system's ability to transform raw root images into actionable intelligence for precision agriculture.](elsevier/figures/25_rhizo_net_ultimate_dashboard.png)
+![Figure 31: RHIZO-NET ultimate agro-technology dashboard consolidating all system outputs.](elsevier/figures/25_rhizo_net_ultimate_dashboard.png)
 
 *Figure 31. Ultimate system dashboard consolidating all outputs.*
 
@@ -613,35 +572,35 @@ Optimiser: AdamW with weight decay 1e-4. Batch size: 16. Input resolution: 128×
 
 ## Ablation Study
 
-To quantify the contribution of each architectural component, loss term, and pipeline module, we conducted a systematic ablation across 15 Kaggle execution versions spanning approximately 180 GPU-hours on Tesla T4 and P100 accelerators.
+To quantify the contribution of each architectural component, loss term, and pipeline module, we conducted a systematic ablation across 15 Kaggle execution versions.
 
 ```mermaid
 flowchart LR
     subgraph Phase1 ["Phase 1: Baseline"]
-        V1["v1-v3\nRhizoUNet + BCE\nLoss: 0.8520\nIoU: 62.4%"]
+        V1["v1-v3: RhizoUNet + BCE\nLoss: 0.8520, IoU: 62.4%"]
     end
     subgraph Phase2 ["Phase 2: Hardware Fix"]
-        V2["v4-v5\nCPU Fallback + Dice\nLoss: 0.6322\nIoU: 72.4%"]
+        V2["v4-v5: CPU Fallback + Dice\nLoss: 0.6322, IoU: 72.4%"]
     end
     subgraph Phase3 ["Phase 3: Topology"]
-        V3["v6-v8\nclDice + skan + SoilGrids\nLoss: 0.2339\nIoU: 82.5%"]
+        V3["v6-v8: clDice + skan + SoilGrids\nLoss: 0.2339, IoU: 82.5%"]
     end
     subgraph Phase4 ["Phase 4: Integration"]
-        V4["v9-v10\nTNAU Engine\nLoss: 0.1027\nIoU: 89.7%"]
+        V4["v9-v10: TNAU Engine\nLoss: 0.1027, IoU: 89.7%"]
     end
     subgraph Phase5 ["Phase 5: Physics"]
-        V5["v11-v12\nPIET + GRSR + GraphFormer\nLoss: 0.0784\nIoU: 93.8%"]
+        V5["v11-v12: PIET + GRSR + GraphFormer\nLoss: 0.0784, IoU: 93.8%"]
     end
     subgraph Phase6 ["Phase 6: Visualisation"]
-        V6["v13-v14\nPlot Generation\nLoss: 0.0784\nIoU: 93.8%"]
+        V6["v13-v14: Plot Generation\nLoss: 0.0784, IoU: 93.8%"]
     end
     subgraph Phase7 ["Phase 7: Final"]
-        V7["v15\n20-Epoch Curriculum\nLoss: 0.0412\nIoU: 97.9%"]
+        V7["v15: 20-Epoch Curriculum\nLoss: 0.0412, IoU: 97.9%"]
     end
     V1 --> V2 --> V3 --> V4 --> V5 --> V6 --> V7
 ```
 
-*Figure 32. Ablation progression across seven development phases.*
+*Figure 32. Ablation progression flowchart across seven development phases.*
 
 | Phase | Versions | Components Added                    | Loss   | IoU    | Key Finding                                         |
 |:------|:---------|:------------------------------------|-------:|-------:|:----------------------------------------------------|
@@ -654,20 +613,6 @@ flowchart LR
 | 7     | v15      | 20-epoch curriculum, CARRS, RCS     | 0.0412 | 97.9%  | State-of-the-art; carbon credit tracking activated  |
 
 *Table 4. Ablation study results. Each phase introduces specific components; the monotonic loss reduction confirms their individual contributions.*
-
-**Phase 1 (Versions 1–3): Baseline.** The initial RhizoUNet trained with BCE loss achieved 62.4% IoU, with severe fragmentation on fine lateral roots. False positive rates were high in images with organic soil debris. ONNX export was validated but inference times were not optimised.
-
-**Phase 2 (Versions 4–5): Hardware Fix.** Kaggle's Tesla P100 GPU uses CUDA compute capability `sm_60`, which was incompatible with the initially compiled PyTorch binaries. A CPU fallback handler was implemented, and Dice Loss was added alongside BCE, improving IoU to 72.4%.
-
-**Phase 3 (Versions 6–8): Topology Preservation.** The introduction of clDice (Shit et al., 2021) provided the single largest improvement in segmentation quality, reducing centreline breaks by 68% and improving IoU from 72.4% to 82.5%. The *skan* morphometric extraction and SoilGrids integration were validated in this phase.
-
-**Phase 4 (Versions 9–10): Agronomic Integration.** The TNAU Agronomic Recommendation Engine was integrated, providing crop-specific fertiliser prescriptions for five crop archetypes. The full multi-stage pipeline was validated end-to-end across all six datasets.
-
-**Phase 5 (Versions 11–12): Physics-Informed Training.** PIET-Loss, GRSR, and RhizoGraphFormer were introduced simultaneously. PIET-Loss provided an additional 3.1 percentage points of IoU improvement by enforcing divergence-free predictions. GRSR successfully repaired 100% of artificially introduced skeleton gaps in controlled experiments.
-
-**Phase 6 (Versions 13–14): Visualisation.** A comprehensive Matplotlib-based visualisation pipeline was developed, generating 20 high-resolution PNG images covering dataset composition, loss curves, architecture benchmarks, segmentation examples, morphometric analyses, agronomic prescriptions, and deployment profiles.
-
-**Phase 7 (Version 15): Full System.** The complete 20-epoch deep curriculum training schedule was executed with all five loss terms, CARRS climate simulation, RCS carbon sequestration prediction, and expanded visualisation to 25 PNG outputs. The final composite loss of 0.0412 and IoU of 97.9% represent the state-of-the-art result for this benchmark.
 
 ---
 
@@ -687,8 +632,6 @@ Trained ONNX model files for all four vision architectures are included in the M
 ## Conclusion
 
 We presented **RhizoWhisperer (RHIZO-NET)**, a comprehensive ten-stage framework for computational root phenotyping that integrates five novel neural architectures, a physics-informed loss function (PIET-Loss), generative skeleton repair (GRSR), multi-modal edaphic fusion via PyG 2.0 graph neural networks and ISRIC SoilGrids chemical profiles, and actionable agronomic, climate, and financial decision support. Our best model, RhizoAttentionNet, achieves **97.9% IoU** at a composite loss of **0.0412** across 106,900 images from six benchmark datasets. The edge-deployable RhizoHybridTransformer variant requires only **79,749 parameters**, **1.17 MB** ONNX storage, and **1.8 ms** CPU inference time, enabling real-time deployment on agricultural drones and embedded field sensors.
-
-**Future work** will extend RHIZO-NET along three directions: (i) 3D volumetric root reconstruction from X-ray computed tomography data using 3D U-Net variants; (ii) temporal growth modelling via recurrent graph networks trained on time-series minirhizotron imagery; and (iii) federated learning across geographically distributed phenotyping facilities to improve model generalisation while preserving data privacy.
 
 ---
 
